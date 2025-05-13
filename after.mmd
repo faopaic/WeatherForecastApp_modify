@@ -1,0 +1,19 @@
+classDiagram
+    class WeatherForecastApp {
+        - String TARGET_URL
+        + main(String[] args)
+    }
+    class WeatherApiClient {
+        - String apiUrl
+        + WeatherApiClient(String apiUrl)
+        + fetchWeatherForecasts() List<WeatherForecast>
+    }
+    class WeatherForecast {
+        - String dateTime
+        - String weather
+        + WeatherForecast(String dateTime, String weather)
+        + getDateTime() String
+        + getWeather() String
+    }
+    WeatherForecastApp --> WeatherApiClient
+    WeatherApiClient --> WeatherForecast
