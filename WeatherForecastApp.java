@@ -18,7 +18,7 @@ import org.json.JSONObject;
  * このアプリケーションは、気象庁のWeb APIから大阪府の天気予報データを取得取得して表示します
  * 
  * @author n.katayama
- * @version 1.0
+ * @version 1.0.1
  */
 public class WeatherForecastApp {
     private static final String TARGET_URL = "https://www.jma.go.jp/bosai/forecast/data/forecast/270000.json";
