@@ -5,8 +5,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +16,7 @@ import org.json.JSONObject;
  * このアプリケーションは、気象庁のWeb APIから大阪府の天気予報データを取得取得して表示します
  * 
  * @author n.katayama
- * @version 1.0
+ * @version 1.0.1
  */
 public class WeatherForecastApp {
     private static final String TARGET_URL = "https://www.jma.go.jp/bosai/forecast/data/forecast/270000.json";
@@ -67,33 +65,14 @@ class WeatherApiClient {
             JSONArray weathersArray = timeStringObject.getJSONArray("areas").getJSONObject(0).getJSONArray("weathers");
 
             for (int i = 0; i < timeDefinesArray.length(); i++) {
-                LocalDateTime dateTime = LocalDateTime.parse(timeDefinesArray.getString(i),
-                        DateTimeFormatter.ISO_DATE_TIME);
+                String dateTimeStr = timeDefinesArray.getString(i);
                 String weather = weathersArray.getString(i);
-                forecasts.add(new WeatherForecast(dateTime, weather));
+                forecasts.add(new WeatherForecast(dateTimeStr, weather));
             }
         } else {
             throw new IOException("データの取得に失敗しました！");
         }
 
         return forecasts;
-    }
-}
-
-class WeatherForecast {
-    private final LocalDateTime dateTime;
-    private final String weather;
-
-    public WeatherForecast(LocalDateTime dateTime, String weather) {
-        this.dateTime = dateTime;
-        this.weather = weather;
-    }
-
-    public LocalDateTime getDateTime() {
-        return dateTime;
-    }
-
-    public String getWeather() {
-        return weather;
     }
 }
