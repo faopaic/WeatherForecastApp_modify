@@ -5,8 +5,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +16,7 @@ import org.json.JSONObject;
  * このアプリケーションは、気象庁のWeb APIから大阪府の天気予報データを取得取得して表示します
  * 
  * @author n.katayama
- * @version 1.0
+ * @version 1.0.1
  */
 public class WeatherForecastApp {
     private static final String TARGET_URL = "https://www.jma.go.jp/bosai/forecast/data/forecast/270000.json";
@@ -27,7 +25,22 @@ public class WeatherForecastApp {
         WeatherApiClient client = new WeatherApiClient(TARGET_URL);
         try {
             for (WeatherForecast forecast : client.fetchWeatherForecasts()) {
-                System.out.println(forecast.getDateTime() + " " + forecast.getWeather());
+                // 日付を yyyy/MM/dd → yyyy年M月d日 に変換
+                String[] dateParts = forecast.getDateTime().split("/");
+                if (dateParts.length == 3) {
+                    int year = Integer.parseInt(dateParts[0]);
+                    int month = Integer.parseInt(dateParts[1]);
+                    int day = Integer.parseInt(dateParts[2].split(" ")[0]);
+                    String weather = forecast.getWeather();
+                    // 天気情報が日付の後ろに含まれている場合の対応
+                    if (forecast.getDateTime().contains(" ")) {
+                        weather = forecast.getDateTime().substring(forecast.getDateTime().indexOf(" ") + 1);
+                    }
+                    System.out.println(year + "年" + month + "月" + day + "日 の天気は " + weather + " です。");
+                } else {
+                    // フォールバック（元の出力）
+                    System.out.println(forecast.getDateTime() + " " + forecast.getWeather());
+                }
             }
         } catch (Exception e) {
             System.out.println("天気予報の取得に失敗しました: " + e.getMessage());
@@ -67,10 +80,9 @@ class WeatherApiClient {
             JSONArray weathersArray = timeStringObject.getJSONArray("areas").getJSONObject(0).getJSONArray("weathers");
 
             for (int i = 0; i < timeDefinesArray.length(); i++) {
-                LocalDateTime dateTime = LocalDateTime.parse(timeDefinesArray.getString(i),
-                        DateTimeFormatter.ISO_DATE_TIME);
+                String dateTimeStr = timeDefinesArray.getString(i);
                 String weather = weathersArray.getString(i);
-                forecasts.add(new WeatherForecast(dateTime, weather));
+                forecasts.add(new WeatherForecast(dateTimeStr, weather));
             }
         } else {
             throw new IOException("データの取得に失敗しました！");
@@ -79,23 +91,3 @@ class WeatherApiClient {
         return forecasts;
     }
 }
-
-class WeatherForecast {
-    private final LocalDateTime dateTime;
-    private final String weather;
-
-    public WeatherForecast(LocalDateTime dateTime, String weather) {
-        this.dateTime = dateTime;
-        this.weather = weather;
-    }
-
-    public LocalDateTime getDateTime() {
-        return dateTime;
-    }
-
-    public String getWeather() {
-        return weather;
-    }
-}
-
-// Compare this snippet from WeatherForecast.java:

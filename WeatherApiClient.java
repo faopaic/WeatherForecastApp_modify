@@ -4,6 +4,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,14 +38,26 @@ public class WeatherApiClient {
                     }
                 }
                 JSONArray rootArray = new JSONArray(responseBody.toString());
-                JSONObject timeStringObject = rootArray.getJSONObject(0).optJSONArray("timeSeries").getJSONObject(0);
-                JSONArray timeDefinesArray = timeStringObject.getJSONArray("timeDefines");
-                JSONArray weathersArray = timeStringObject.getJSONArray("areas").getJSONObject(0)
-                        .getJSONArray("weathers");
-                for (int i = 0; i < timeDefinesArray.length(); i++) {
-                    String dateTime = timeDefinesArray.getString(i);
-                    String weather = weathersArray.getString(i);
-                    forecasts.add(new WeatherForecast(dateTime, weather));
+                JSONArray timeSeriesArray = rootArray.getJSONObject(0).optJSONArray("timeSeries");
+                if (timeSeriesArray != null && timeSeriesArray.length() > 0) {
+                    JSONObject timeStringObject = timeSeriesArray.getJSONObject(0);
+                    JSONArray timeDefinesArray = timeStringObject.optJSONArray("timeDefines");
+                    JSONArray areasArray = timeStringObject.optJSONArray("areas");
+                    if (timeDefinesArray != null && areasArray != null && areasArray.length() > 0) {
+                        JSONArray weathersArray = areasArray.getJSONObject(0).optJSONArray("weathers");
+                        if (weathersArray != null) {
+                            // 日付（yyyy/MM/dd）＋天気（スペース区切り）で1行出力用にまとめる
+                            for (int i = 0; i < Math.min(timeDefinesArray.length(), weathersArray.length()); i++) {
+                                String dateTimeStr = timeDefinesArray.getString(i);
+                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr,
+                                        DateTimeFormatter.ISO_DATE_TIME);
+                                String weather = weathersArray.getString(i);
+                                // 日付をyyyy/MM/dd形式に変換
+                                String dateStr = dateTime.toLocalDate().toString().replace("-", "/");
+                                forecasts.add(new WeatherForecast(dateStr + " " + weather, ""));
+                            }
+                        }
+                    }
                 }
             } else {
                 throw new IOException("データの取得に失敗しました！");
