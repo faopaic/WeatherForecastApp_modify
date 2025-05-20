@@ -1,3 +1,4 @@
+
 public class WeatherForecast {
     private final String dateTime;
     private final String weather;
