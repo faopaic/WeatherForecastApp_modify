@@ -97,3 +97,5 @@ class WeatherForecast {
         return weather;
     }
 }
+
+// Compare this snippet from WeatherForecast.java:
