@@ -46,16 +46,52 @@ public class WeatherApiClient {
                     if (timeDefinesArray != null && areasArray != null && areasArray.length() > 0) {
                         JSONArray weathersArray = areasArray.getJSONObject(0).optJSONArray("weathers");
                         if (weathersArray != null) {
-                            // 日付（yyyy/MM/dd）＋天気（スペース区切り）で1行出力用にまとめる
+                            // 日付ごとに天気をまとめて表形式で出力するための準備
+                            List<String> dateList = new ArrayList<>();
+                            List<String> weatherList = new ArrayList<>();
                             for (int i = 0; i < Math.min(timeDefinesArray.length(), weathersArray.length()); i++) {
                                 String dateTimeStr = timeDefinesArray.getString(i);
                                 LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr,
                                         DateTimeFormatter.ISO_DATE_TIME);
-                                String weather = weathersArray.getString(i);
-                                // 日付をyyyy/MM/dd形式に変換
                                 String dateStr = dateTime.toLocalDate().toString().replace("-", "/");
-                                forecasts.add(new WeatherForecast(dateStr + " " + weather, ""));
+                                String weather = weathersArray.getString(i)
+                                        .replace("/", "後")
+                                        .replace("　", " "); // 全角スペースを半角スペースに
+                                dateList.add(dateStr);
+                                weatherList.add(weather);
                             }
+                            // 列幅を揃えるため、日付・天気の最大「表示幅」を計算（日本語は2文字分とする）
+                            int[] colWidths = new int[dateList.size()];
+                            for (int i = 0; i < dateList.size(); i++) {
+                                int dateLen = getDisplayWidth(dateList.get(i));
+                                int weatherLen = getDisplayWidth(weatherList.get(i));
+                                colWidths[i] = Math.max(dateLen, weatherLen);
+                            }
+                            // 表形式の1行目（日付）
+                            StringBuilder dateRow = new StringBuilder("| 日付 ");
+                            for (int i = 0; i < dateList.size(); i++) {
+                                String date = dateList.get(i);
+                                int pad = colWidths[i] - getDisplayWidth(date);
+                                dateRow.append("| ").append(date);
+                                for (int j = 0; j < pad; j++)
+                                    dateRow.append(" ");
+                                dateRow.append(" ");
+                            }
+                            dateRow.append("|");
+                            // 表形式の2行目（天気）
+                            StringBuilder weatherRow = new StringBuilder("| 天気 ");
+                            for (int i = 0; i < weatherList.size(); i++) {
+                                String mark = weatherList.get(i);
+                                int pad = colWidths[i] - getDisplayWidth(mark);
+                                weatherRow.append("| ").append(mark);
+                                for (int j = 0; j < pad; j++)
+                                    weatherRow.append(" ");
+                                weatherRow.append(" ");
+                            }
+                            weatherRow.append("|");
+                            // 1行目と2行目のみWeatherForecastに格納
+                            forecasts.add(new WeatherForecast(dateRow.toString(), ""));
+                            forecasts.add(new WeatherForecast(weatherRow.toString(), ""));
                         }
                     }
                 }
@@ -66,5 +102,23 @@ public class WeatherApiClient {
             throw new IOException("天気予報データの取得に失敗しました: " + e.getMessage(), e);
         }
         return forecasts;
+    }
+
+    // --- ユーティリティ: 日本語は2文字分で幅を計算 ---
+    private int getDisplayWidth(String s) {
+        int width = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            // 全角（日本語など）は2、半角は1
+            if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS ||
+                    Character.UnicodeBlock.of(c) == Character.UnicodeBlock.HIRAGANA ||
+                    Character.UnicodeBlock.of(c) == Character.UnicodeBlock.KATAKANA ||
+                    (c >= 0xFF01 && c <= 0xFF60) || (c >= 0xFFE0 && c <= 0xFFE6)) {
+                width += 2;
+            } else {
+                width += 1;
+            }
+        }
+        return width;
     }
 }
