@@ -6,7 +6,8 @@ body {
 }
 
 .container {
-    max-width: 500px;
+    max-width: 900px;
+    /* 地図が大きくなるので幅を拡大 */
     margin: 40px auto;
     background: #fff;
     border-radius: 10px;
@@ -61,4 +62,51 @@ button {
 
 button:hover {
     background: #17406a;
+}
+
+/* 日本地図SVG用のスタイルを追加 */
+#japan-map {
+    display: block;
+    margin: 0 auto 24px auto;
+    max-width: 700px;
+    width: 100%;
+    height: auto;
+    background: #f5f5f5;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.prefecture {
+    cursor: pointer;
+    transition: fill 0.2s, stroke 0.2s;
+    stroke: #fff;
+    stroke-width: 3;
+}
+
+.prefecture:hover {
+    opacity: 0.7;
+    filter: brightness(1.1);
+}
+
+.prefecture.selected {
+    stroke: #222;
+    stroke-width: 5;
+    filter: drop-shadow(0 0 8px #e67e22);
+}
+
+/* 都道府県ラベル用 */
+.pref-label {
+    font-size: 22px;
+    fill: #fff;
+    font-weight: bold;
+    pointer-events: none;
+    text-shadow: 1px 1px 2px #333, 0 0 2px #333;
+    dominant-baseline: middle;
+}
+
+#selected-pref {
+    text-align: center;
+    font-size: 1.1em;
+    margin-bottom: 12px;
+    color: #2a5d9f;
 }
