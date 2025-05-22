@@ -55,7 +55,6 @@ public class WeatherApiClient {
                             }
                         }
                     }
-                    // --- 最高気温・最低気温の出力 ---
                     if (timeDefinesArray != null && areasArray != null && areasArray.length() > 0) {
                         JSONArray weathersArray = areasArray.getJSONObject(0).optJSONArray("weathers");
                         if (weathersArray != null) {
@@ -65,26 +64,35 @@ public class WeatherApiClient {
                             List<String> minTempList = new ArrayList<>();
                             for (int i = 0; i < Math.min(timeDefinesArray.length(), weathersArray.length()); i++) {
                                 String dateTimeStr = timeDefinesArray.getString(i);
-                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ISO_DATE_TIME);
+                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr,
+                                        DateTimeFormatter.ISO_DATE_TIME);
                                 String dateStr = dateTime.toLocalDate().toString().replace("-", "/");
                                 String weather = weathersArray.getString(i)
                                         .replace("/", "後")
                                         .replace("　", " ");
                                 dateList.add(dateStr);
                                 weatherList.add(weather);
-                                // 気温データ取得
-                                String maxTemp = "-";
+                                // 気温データ取得（偶数:最低, 奇数:最高）
                                 String minTemp = "-";
-                                if (tempsArray != null && tempsArray.length() > i) {
-                                    String val = tempsArray.isNull(i) ? "-" : tempsArray.getString(i);
-                                    if (val != null && !val.isEmpty() && !val.equals("null")) {
-                                        maxTemp = val;
+                                String maxTemp = "-";
+                                if (tempsArray != null) {
+                                    int minIdx = i * 2;
+                                    int maxIdx = i * 2 + 1;
+                                    String minVal = null;
+                                    String maxVal = null;
+                                    if (tempsArray.length() > minIdx) {
+                                        minVal = tempsArray.isNull(minIdx) ? "-" : tempsArray.getString(minIdx);
+                                        if (minVal != null && !minVal.isEmpty() && !minVal.equals("null"))
+                                            minTemp = minVal;
                                     }
-                                }
-                                if (tempsArray != null && tempsArray.length() > i + 1) {
-                                    String val = tempsArray.isNull(i + 1) ? "-" : tempsArray.getString(i + 1);
-                                    if (val != null && !val.isEmpty() && !val.equals("null")) {
-                                        minTemp = val;
+                                    if (tempsArray.length() > maxIdx) {
+                                        maxVal = tempsArray.isNull(maxIdx) ? "-" : tempsArray.getString(maxIdx);
+                                        if (maxVal != null && !maxVal.isEmpty() && !maxVal.equals("null"))
+                                            maxTemp = maxVal;
+                                    }
+                                    // 最高気温と最低気温が同じ場合は最低気温をハイフンに
+                                    if (minTemp.equals(maxTemp)) {
+                                        minTemp = "-";
                                     }
                                 }
                                 maxTempList.add(maxTemp);
