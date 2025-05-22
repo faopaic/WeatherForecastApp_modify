@@ -12,21 +12,9 @@ public class WeatherForecastApp {
         WeatherApiClient client = new WeatherApiClient(TARGET_URL);
         try {
             for (WeatherForecast forecast : client.fetchWeatherForecasts()) {
-                // 日付を yyyy/MM/dd → yyyy年M月d日 に変換
-                String[] dateParts = forecast.getDateTime().split("/");
-                if (dateParts.length == 3) {
-                    int year = Integer.parseInt(dateParts[0]);
-                    int month = Integer.parseInt(dateParts[1]);
-                    int day = Integer.parseInt(dateParts[2].split(" ")[0]);
-                    String weather = forecast.getWeather();
-                    // 天気情報が日付の後ろに含まれている場合の対応
-                    if (forecast.getDateTime().contains(" ")) {
-                        weather = forecast.getDateTime().substring(forecast.getDateTime().indexOf(" ") + 1);
-                    }
-                    System.out.println(year + "年" + month + "月" + day + "日 の天気は " + weather + " です。");
-                } else {
-                    // フォールバック（元の出力）
-                    System.out.println(forecast.getDateTime() + " " + forecast.getWeather());
+                // 表形式（| で始まる行）はそのまま出力
+                if (forecast.getDateTime().startsWith("| ")) {
+                    System.out.println(forecast.getDateTime());
                 }
             }
         } catch (Exception e) {
