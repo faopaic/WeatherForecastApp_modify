@@ -43,19 +43,102 @@ public class WeatherApiClient {
                     JSONObject timeStringObject = timeSeriesArray.getJSONObject(0);
                     JSONArray timeDefinesArray = timeStringObject.optJSONArray("timeDefines");
                     JSONArray areasArray = timeStringObject.optJSONArray("areas");
+                    // --- 気温データ取得用 ---
+                    JSONArray tempsArray = null;
+                    if (timeSeriesArray.length() > 2) {
+                        JSONObject tempObj = timeSeriesArray.getJSONObject(2);
+                        JSONArray tempAreas = tempObj.optJSONArray("areas");
+                        if (tempAreas != null && tempAreas.length() > 0) {
+                            JSONObject tempArea = tempAreas.getJSONObject(0);
+                            if (tempArea.has("temps")) {
+                                tempsArray = tempArea.optJSONArray("temps");
+                            }
+                        }
+                    }
+                    // --- 最高気温・最低気温の出力 ---
                     if (timeDefinesArray != null && areasArray != null && areasArray.length() > 0) {
                         JSONArray weathersArray = areasArray.getJSONObject(0).optJSONArray("weathers");
                         if (weathersArray != null) {
-                            // 日付（yyyy/MM/dd）＋天気（スペース区切り）で1行出力用にまとめる
+                            List<String> dateList = new ArrayList<>();
+                            List<String> weatherList = new ArrayList<>();
+                            List<String> maxTempList = new ArrayList<>();
+                            List<String> minTempList = new ArrayList<>();
                             for (int i = 0; i < Math.min(timeDefinesArray.length(), weathersArray.length()); i++) {
                                 String dateTimeStr = timeDefinesArray.getString(i);
-                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr,
-                                        DateTimeFormatter.ISO_DATE_TIME);
-                                String weather = weathersArray.getString(i);
-                                // 日付をyyyy/MM/dd形式に変換
+                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ISO_DATE_TIME);
                                 String dateStr = dateTime.toLocalDate().toString().replace("-", "/");
-                                forecasts.add(new WeatherForecast(dateStr + " " + weather, ""));
+                                String weather = weathersArray.getString(i)
+                                        .replace("/", "後")
+                                        .replace("　", " ");
+                                dateList.add(dateStr);
+                                weatherList.add(weather);
+                                // 気温データ取得
+                                String maxTemp = "-";
+                                String minTemp = "-";
+                                if (tempsArray != null && tempsArray.length() > i) {
+                                    String val = tempsArray.isNull(i) ? "-" : tempsArray.getString(i);
+                                    if (val != null && !val.isEmpty() && !val.equals("null")) {
+                                        maxTemp = val;
+                                    }
+                                }
+                                if (tempsArray != null && tempsArray.length() > i + 1) {
+                                    String val = tempsArray.isNull(i + 1) ? "-" : tempsArray.getString(i + 1);
+                                    if (val != null && !val.isEmpty() && !val.equals("null")) {
+                                        minTemp = val;
+                                    }
+                                }
+                                maxTempList.add(maxTemp);
+                                minTempList.add(minTemp);
                             }
+                            int n = dateList.size();
+                            int[] colWidths = new int[n];
+                            for (int i = 0; i < n; i++) {
+                                int maxLen = getDisplayWidth(dateList.get(i));
+                                maxLen = Math.max(maxLen, getDisplayWidth(weatherList.get(i)));
+                                maxLen = Math.max(maxLen, getDisplayWidth(maxTempList.get(i)));
+                                maxLen = Math.max(maxLen, getDisplayWidth(minTempList.get(i)));
+                                maxLen = Math.max(maxLen, getDisplayWidth("日付"));
+                                maxLen = Math.max(maxLen, getDisplayWidth("天気"));
+                                maxLen = Math.max(maxLen, getDisplayWidth("最高気温"));
+                                maxLen = Math.max(maxLen, getDisplayWidth("最低気温"));
+                                if (maxLen % 2 != 0)
+                                    maxLen++;
+                                colWidths[i] = maxLen;
+                            }
+                            int labelColWidth = getDisplayWidth("最高気温");
+                            labelColWidth = Math.max(labelColWidth, getDisplayWidth("最低気温"));
+                            labelColWidth = Math.max(labelColWidth, getDisplayWidth("天気"));
+                            labelColWidth = Math.max(labelColWidth, getDisplayWidth("日付"));
+                            if (labelColWidth % 2 != 0)
+                                labelColWidth++;
+                            StringBuilder dateRow = new StringBuilder("| ");
+                            dateRow.append(padBoth("日付", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                dateRow.append(" | ").append(padBoth(dateList.get(i), colWidths[i]));
+                            }
+                            dateRow.append(" |");
+                            StringBuilder weatherRow = new StringBuilder("| ");
+                            weatherRow.append(padBoth("天気", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                weatherRow.append(" | ").append(padBoth(weatherList.get(i), colWidths[i]));
+                            }
+                            weatherRow.append(" |");
+                            StringBuilder maxTempRow = new StringBuilder("| ");
+                            maxTempRow.append(padBoth("最高気温", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                maxTempRow.append(" | ").append(padBoth(maxTempList.get(i), colWidths[i]));
+                            }
+                            maxTempRow.append(" |");
+                            StringBuilder minTempRow = new StringBuilder("| ");
+                            minTempRow.append(padBoth("最低気温", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                minTempRow.append(" | ").append(padBoth(minTempList.get(i), colWidths[i]));
+                            }
+                            minTempRow.append(" |");
+                            forecasts.add(new WeatherForecast(dateRow.toString(), ""));
+                            forecasts.add(new WeatherForecast(weatherRow.toString(), ""));
+                            forecasts.add(new WeatherForecast(maxTempRow.toString(), ""));
+                            forecasts.add(new WeatherForecast(minTempRow.toString(), ""));
                         }
                     }
                 }
@@ -66,5 +149,37 @@ public class WeatherApiClient {
             throw new IOException("天気予報データの取得に失敗しました: " + e.getMessage(), e);
         }
         return forecasts;
+    }
+
+    // --- ユーティリティ: 日本語は2文字分で幅を計算 ---
+    private int getDisplayWidth(String s) {
+        int width = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            // 全角（日本語など）は2、半角は1
+            if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS ||
+                    Character.UnicodeBlock.of(c) == Character.UnicodeBlock.HIRAGANA ||
+                    Character.UnicodeBlock.of(c) == Character.UnicodeBlock.KATAKANA ||
+                    (c >= 0xFF01 && c <= 0xFF60) || (c >= 0xFFE0 && c <= 0xFFE6)) {
+                width += 2;
+            } else {
+                width += 1;
+            }
+        }
+        return width;
+    }
+
+    // --- 指定幅で両端パディング（全角考慮） ---
+    private String padBoth(String s, int width) {
+        int pad = width - getDisplayWidth(s);
+        int left = pad / 2;
+        int right = pad - left;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < left; i++)
+            sb.append(' ');
+        sb.append(s);
+        for (int i = 0; i < right; i++)
+            sb.append(' ');
+        return sb.toString();
     }
 }
