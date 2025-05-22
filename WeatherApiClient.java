@@ -44,98 +44,97 @@ public class WeatherApiClient {
                     JSONArray timeDefinesArray = timeStringObject.optJSONArray("timeDefines");
                     JSONArray areasArray = timeStringObject.optJSONArray("areas");
                     // --- 気温データ取得用 ---
-                    JSONArray tempAreasArray = null;
-                    JSONArray tempsMaxArray = null;
-                    JSONArray tempsMinArray = null;
-                    if (timeSeriesArray.length() > 1) {
-                        JSONObject tempObject = timeSeriesArray.getJSONObject(1);
-                        tempAreasArray = tempObject.optJSONArray("areas");
-                        if (tempAreasArray != null && tempAreasArray.length() > 0) {
-                            JSONObject tempArea = tempAreasArray.getJSONObject(0);
-                            tempsMaxArray = tempArea.optJSONArray("tempsMax");
-                            tempsMinArray = tempArea.optJSONArray("tempsMin");
+                    JSONArray tempsArray = null;
+                    if (timeSeriesArray.length() > 2) {
+                        JSONObject tempObj = timeSeriesArray.getJSONObject(2);
+                        JSONArray tempAreas = tempObj.optJSONArray("areas");
+                        if (tempAreas != null && tempAreas.length() > 0) {
+                            JSONObject tempArea = tempAreas.getJSONObject(0);
+                            if (tempArea.has("temps")) {
+                                tempsArray = tempArea.optJSONArray("temps");
+                            }
                         }
                     }
+                    // --- 最高気温・最低気温の出力 ---
                     if (timeDefinesArray != null && areasArray != null && areasArray.length() > 0) {
                         JSONArray weathersArray = areasArray.getJSONObject(0).optJSONArray("weathers");
                         if (weathersArray != null) {
-                            // 日付ごとに天気をまとめて表形式で出力するための準備
                             List<String> dateList = new ArrayList<>();
                             List<String> weatherList = new ArrayList<>();
                             List<String> maxTempList = new ArrayList<>();
                             List<String> minTempList = new ArrayList<>();
                             for (int i = 0; i < Math.min(timeDefinesArray.length(), weathersArray.length()); i++) {
                                 String dateTimeStr = timeDefinesArray.getString(i);
-                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr,
-                                        DateTimeFormatter.ISO_DATE_TIME);
+                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ISO_DATE_TIME);
                                 String dateStr = dateTime.toLocalDate().toString().replace("-", "/");
                                 String weather = weathersArray.getString(i)
                                         .replace("/", "後")
-                                        .replace("　", " "); // 全角スペースを半角スペースに
+                                        .replace("　", " ");
                                 dateList.add(dateStr);
                                 weatherList.add(weather);
                                 // 気温データ取得
                                 String maxTemp = "-";
                                 String minTemp = "-";
-                                if (tempsMaxArray != null && i < tempsMaxArray.length()) {
-                                    maxTemp = tempsMaxArray.isNull(i) ? "-" : tempsMaxArray.getString(i);
+                                if (tempsArray != null && tempsArray.length() > i) {
+                                    String val = tempsArray.isNull(i) ? "-" : tempsArray.getString(i);
+                                    if (val != null && !val.isEmpty() && !val.equals("null")) {
+                                        maxTemp = val;
+                                    }
                                 }
-                                if (tempsMinArray != null && i < tempsMinArray.length()) {
-                                    minTemp = tempsMinArray.isNull(i) ? "-" : tempsMinArray.getString(i);
+                                if (tempsArray != null && tempsArray.length() > i + 1) {
+                                    String val = tempsArray.isNull(i + 1) ? "-" : tempsArray.getString(i + 1);
+                                    if (val != null && !val.isEmpty() && !val.equals("null")) {
+                                        minTemp = val;
+                                    }
                                 }
                                 maxTempList.add(maxTemp);
                                 minTempList.add(minTemp);
                             }
-                            // 列幅を揃えるため、日付・天気・気温の最大「表示幅」を計算（日本語は2文字分とする）
-                            int[] colWidths = new int[dateList.size()];
-                            for (int i = 0; i < dateList.size(); i++) {
-                                int dateLen = getDisplayWidth(dateList.get(i));
-                                int weatherLen = getDisplayWidth(weatherList.get(i));
-                                int maxTempLen = getDisplayWidth(maxTempList.get(i));
-                                int minTempLen = getDisplayWidth(minTempList.get(i));
-                                colWidths[i] = Math.max(Math.max(dateLen, weatherLen), Math.max(maxTempLen, minTempLen));
+                            int n = dateList.size();
+                            int[] colWidths = new int[n];
+                            for (int i = 0; i < n; i++) {
+                                int maxLen = getDisplayWidth(dateList.get(i));
+                                maxLen = Math.max(maxLen, getDisplayWidth(weatherList.get(i)));
+                                maxLen = Math.max(maxLen, getDisplayWidth(maxTempList.get(i)));
+                                maxLen = Math.max(maxLen, getDisplayWidth(minTempList.get(i)));
+                                maxLen = Math.max(maxLen, getDisplayWidth("日付"));
+                                maxLen = Math.max(maxLen, getDisplayWidth("天気"));
+                                maxLen = Math.max(maxLen, getDisplayWidth("最高気温"));
+                                maxLen = Math.max(maxLen, getDisplayWidth("最低気温"));
+                                if (maxLen % 2 != 0)
+                                    maxLen++;
+                                colWidths[i] = maxLen;
                             }
-                            // 表形式の1行目（日付）
-                            StringBuilder dateRow = new StringBuilder("| 日付");
-                            for (int i = 0; i < dateList.size(); i++) {
-                                String date = dateList.get(i);
-                                int pad = colWidths[i] - getDisplayWidth(date);
-                                dateRow.append(" | ").append(date);
-                                for (int j = 0; j < pad; j++)
-                                    dateRow.append(" ");
+                            int labelColWidth = getDisplayWidth("最高気温");
+                            labelColWidth = Math.max(labelColWidth, getDisplayWidth("最低気温"));
+                            labelColWidth = Math.max(labelColWidth, getDisplayWidth("天気"));
+                            labelColWidth = Math.max(labelColWidth, getDisplayWidth("日付"));
+                            if (labelColWidth % 2 != 0)
+                                labelColWidth++;
+                            StringBuilder dateRow = new StringBuilder("| ");
+                            dateRow.append(padBoth("日付", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                dateRow.append(" | ").append(padBoth(dateList.get(i), colWidths[i]));
                             }
-                            dateRow.append("  |");
-                            // 表形式の2行目（天気）
-                            StringBuilder weatherRow = new StringBuilder("| 天気");
-                            for (int i = 0; i < weatherList.size(); i++) {
-                                String mark = weatherList.get(i);
-                                int pad = colWidths[i] - getDisplayWidth(mark);
-                                weatherRow.append(" | ").append(mark);
-                                for (int j = 0; j < pad; j++)
-                                    weatherRow.append(" ");
+                            dateRow.append(" |");
+                            StringBuilder weatherRow = new StringBuilder("| ");
+                            weatherRow.append(padBoth("天気", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                weatherRow.append(" | ").append(padBoth(weatherList.get(i), colWidths[i]));
                             }
                             weatherRow.append(" |");
-                            // 表形式の3行目（最高気温）
-                            StringBuilder maxTempRow = new StringBuilder("| 最高気温");
-                            for (int i = 0; i < maxTempList.size(); i++) {
-                                String temp = maxTempList.get(i);
-                                int pad = colWidths[i] - getDisplayWidth(temp);
-                                maxTempRow.append(" | ").append(temp);
-                                for (int j = 0; j < pad; j++)
-                                    maxTempRow.append(" ");
+                            StringBuilder maxTempRow = new StringBuilder("| ");
+                            maxTempRow.append(padBoth("最高気温", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                maxTempRow.append(" | ").append(padBoth(maxTempList.get(i), colWidths[i]));
                             }
                             maxTempRow.append(" |");
-                            // 表形式の4行目（最低気温）
-                            StringBuilder minTempRow = new StringBuilder("| 最低気温");
-                            for (int i = 0; i < minTempList.size(); i++) {
-                                String temp = minTempList.get(i);
-                                int pad = colWidths[i] - getDisplayWidth(temp);
-                                minTempRow.append(" | ").append(temp);
-                                for (int j = 0; j < pad; j++)
-                                    minTempRow.append(" ");
+                            StringBuilder minTempRow = new StringBuilder("| ");
+                            minTempRow.append(padBoth("最低気温", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                minTempRow.append(" | ").append(padBoth(minTempList.get(i), colWidths[i]));
                             }
                             minTempRow.append(" |");
-                            // 各行をWeatherForecastに格納
                             forecasts.add(new WeatherForecast(dateRow.toString(), ""));
                             forecasts.add(new WeatherForecast(weatherRow.toString(), ""));
                             forecasts.add(new WeatherForecast(maxTempRow.toString(), ""));
@@ -168,5 +167,19 @@ public class WeatherApiClient {
             }
         }
         return width;
+    }
+
+    // --- 指定幅で両端パディング（全角考慮） ---
+    private String padBoth(String s, int width) {
+        int pad = width - getDisplayWidth(s);
+        int left = pad / 2;
+        int right = pad - left;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < left; i++)
+            sb.append(' ');
+        sb.append(s);
+        for (int i = 0; i < right; i++)
+            sb.append(' ');
+        return sb.toString();
     }
 }
