@@ -138,16 +138,18 @@
         let selectedPref = null;
         // クリックイベントを都道府県リストに追加
         document.querySelectorAll('#jp_map li').forEach(el => {
-            el.addEventListener('click', function () {
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
                 document.querySelectorAll('#jp_map li').forEach(p => p.classList.remove('selected'));
                 this.classList.add('selected');
                 // クラス名から都道府県IDを取得
                 const prefId = this.classList[0];
                 selectedPref = prefId;
                 const pref = prefCodeMap[prefId];
-                document.getElementById('selected-pref').textContent = pref ? `${pref.name}が選択されました` : '';
-                document.getElementById('fetch-btn').style.display = '';
-                document.getElementById('weather-list').innerHTML = '';
+                if (pref) {
+                    // 別ページに遷移し、都道府県IDをパラメータで渡す
+                    window.location.href = `pref.html?pref=${prefId}`;
+                }
             });
         });
         document.getElementById('fetch-btn').addEventListener('click', async function () {
