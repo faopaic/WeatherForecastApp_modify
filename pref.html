@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天気予報</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1 id="page-title">天気予報</h1>
+        <div id="weather-list"></div>
+        <button onclick="history.back()">戻る</button>
+    </div>
+    <script>
+        // 都道府県コードマップ
+        const prefCodeMap = {
+            hokkaido: { code: '016000', name: '北海道' },
+            aomori: { code: '020000', name: '青森県' },
+            iwate: { code: '030000', name: '岩手県' },
+            miyagi: { code: '040000', name: '宮城県' },
+            akita: { code: '050000', name: '秋田県' },
+            yamagata: { code: '060000', name: '山形県' },
+            fukushima: { code: '070000', name: '福島県' },
+            ibaraki: { code: '080000', name: '茨城県' },
+            tochigi: { code: '090000', name: '栃木県' },
+            gunma: { code: '100000', name: '群馬県' },
+            saitama: { code: '110000', name: '埼玉県' },
+            chiba: { code: '120000', name: '千葉県' },
+            tokyo: { code: '130000', name: '東京都' },
+            kanagawa: { code: '140000', name: '神奈川県' },
+            niigata: { code: '150000', name: '新潟県' },
+            toyama: { code: '160000', name: '富山県' },
+            ishikawa: { code: '170000', name: '石川県' },
+            fukui: { code: '180000', name: '福井県' },
+            yamanashi: { code: '190000', name: '山梨県' },
+            nagano: { code: '200000', name: '長野県' },
+            gifu: { code: '210000', name: '岐阜県' },
+            shizuoka: { code: '220000', name: '静岡県' },
+            aichi: { code: '230000', name: '愛知県' },
+            mie: { code: '240000', name: '三重県' },
+            shiga: { code: '250000', name: '滋賀県' },
+            kyoto: { code: '260000', name: '京都府' },
+            osaka: { code: '270000', name: '大阪府' },
+            hyogo: { code: '280000', name: '兵庫県' },
+            nara: { code: '290000', name: '奈良県' },
+            wakayama: { code: '300000', name: '和歌山県' },
+            tottori: { code: '310000', name: '鳥取県' },
+            shimane: { code: '320000', name: '島根県' },
+            okayama: { code: '330000', name: '岡山県' },
+            hiroshima: { code: '340000', name: '広島県' },
+            yamaguchi: { code: '350000', name: '山口県' },
+            tokushima: { code: '360000', name: '徳島県' },
+            kagawa: { code: '370000', name: '香川県' },
+            ehime: { code: '380000', name: '愛媛県' },
+            kochi: { code: '390000', name: '高知県' },
+            fukuoka: { code: '400000', name: '福岡県' },
+            saga: { code: '410000', name: '佐賀県' },
+            nagasaki: { code: '420000', name: '長崎県' },
+            kumamoto: { code: '430000', name: '熊本県' },
+            oita: { code: '440000', name: '大分県' },
+            miyazaki: { code: '450000', name: '宮崎県' },
+            kagoshima: { code: '460100', name: '鹿児島県' },
+            okinawa: { code: '471000', name: '沖縄県' }
+        };
+        // URLパラメータから都道府県ID取得
+        const params = new URLSearchParams(location.search);
+        const prefId = params.get('pref');
+        const pref = prefCodeMap[prefId];
+        if (!pref) {
+            document.getElementById('page-title').textContent = '都道府県が指定されていません';
+        } else {
+            document.getElementById('page-title').textContent = `${pref.name}の天気予報`;
+            fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${pref.code}.json`)
+                .then(res => res.json())
+                .then(data => {
+                    const area = data[0].timeSeries[0].areas[0];
+                    const dates = data[0].timeSeries[0].timeDefines;
+                    const weathers = area.weathers;
+                    let html = '';
+                    for (let i = 0; i < dates.length; i++) {
+                        const date = new Date(dates[i]);
+                        const y = date.getFullYear();
+                        const m = date.getMonth() + 1;
+                        const d = date.getDate();
+                        html += `<div class="weather-item"><span class="date">${y}年${m}月${d}日</span> の天気は <span class="weather">${weathers[i]}</span> です。</div>`;
+                    }
+                    document.getElementById('weather-list').innerHTML = html;
+                })
+                .catch(() => {
+                    document.getElementById('weather-list').textContent = '天気予報データの取得に失敗しました。';
+                });
+        }
+    </script>
+</body>
+
+</html>
