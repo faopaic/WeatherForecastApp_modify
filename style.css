@@ -6,7 +6,7 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1000px;
     /* 1100px→1400pxに拡大 */
     margin: 40px auto 0 auto;
     padding: 32px 24px;
@@ -125,7 +125,7 @@ button:hover {
 
 /*::::::::::: JAPAN MAP 日本地図 :::::::::::*/
 #jp_map {
-    max-height: 640px;
+    max-height: 600px;
     position: relative;
     list-style-type: none;
     margin: 0 auto;
@@ -157,7 +157,7 @@ button:hover {
     box-sizing: border-box;
     border: solid #fff 2px;
     float: none;
-    font-size: 14px;
+    font-size: 18px;
     line-height: 1;
     padding: 6px 0;
     text-align: center;
