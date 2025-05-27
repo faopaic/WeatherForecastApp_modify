@@ -48,12 +48,15 @@ public class WeatherForecastApp {
                 String maxTemp = forecast.getMaxTemp();
                 String minTemp = forecast.getMinTemp();
                 String pop = forecast.getPop();
+                String wind = forecast.getWindDirection();
+                String wave = forecast.getWaveHeight();
                 if (!year.isEmpty()) {
                     System.out.println(year + "年" + month + "月" + day + "日 の天気: " + weather
-                            + " 最高気温: " + maxTemp + "℃ 最低気温: " + minTemp + "℃ 降水確率: " + pop + "%");
+                            + " 最高気温: " + maxTemp + "℃ 最低気温: " + minTemp + "℃ 降水確率: " + pop + "%"
+                            + " 風向き: " + wind + " 波高: " + wave);
                 } else {
                     // フォールバック（元の出力）
-                    System.out.println(forecast.getDateTime() );
+                    System.out.println(forecast.getDateTime());
                 }
             }
         } catch (Exception e) {
@@ -106,6 +109,16 @@ class WeatherApiClient {
                 JSONArray tempAreas = timeSeries.getJSONObject(2).getJSONArray("areas");
                 tempsArray = tempAreas.getJSONObject(0).optJSONArray("temps");
             }
+            // 風向きと波高のデータを取得して格納
+            JSONArray windList = new JSONArray();
+            JSONArray waveList = new JSONArray();
+            if (timeSeries.length() > 0) {
+                JSONArray windAreas = timeSeries.getJSONObject(0).getJSONArray("areas");
+                if (windAreas.length() > 0) {
+                    windList = windAreas.getJSONObject(0).optJSONArray("winds");
+                    waveList = windAreas.getJSONObject(0).optJSONArray("waves");
+                }
+            }
 
             for (int i = 0; i < timeDefinesArray.length(); i++) {
                 String dateTimeStr = timeDefinesArray.getString(i);
@@ -117,7 +130,9 @@ class WeatherApiClient {
                     minTemp = tempsArray.optString(i * 2, "-");
                     maxTemp = tempsArray.optString(i * 2 + 1, "-");
                 }
-                forecasts.add(new WeatherForecast(dateTimeStr, weather, maxTemp, minTemp, pop));
+                String wind = (windList != null && i < windList.length()) ? windList.optString(i, "-") : "-";
+                String wave = (waveList != null && i < waveList.length()) ? waveList.optString(i, "-") : "-";
+                forecasts.add(new WeatherForecast(dateTimeStr, weather, maxTemp, minTemp, pop, wind, wave));
             }
         } else {
             throw new IOException("データの取得に失敗しました！");
