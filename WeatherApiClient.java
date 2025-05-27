@@ -143,10 +143,63 @@ public class WeatherApiClient {
                                 minTempRow.append(" | ").append(padBoth(minTempList.get(i), colWidths[i]));
                             }
                             minTempRow.append(" |");
-                            forecasts.add(new WeatherForecast(dateRow.toString(), ""));
-                            forecasts.add(new WeatherForecast(weatherRow.toString(), ""));
-                            forecasts.add(new WeatherForecast(maxTempRow.toString(), ""));
-                            forecasts.add(new WeatherForecast(minTempRow.toString(), ""));
+                            // 降水確率データ取得
+                            JSONArray popsArray = null;
+                            if (timeSeriesArray.length() > 1) {
+                                JSONArray popAreas = timeSeriesArray.getJSONObject(1).optJSONArray("areas");
+                                if (popAreas != null && popAreas.length() > 0) {
+                                    popsArray = popAreas.getJSONObject(0).optJSONArray("pops");
+                                }
+                            }
+                            // 降水確率の平均値を日ごとに計算
+                            List<String> avgPopList = new ArrayList<>();
+                            if (popsArray != null && popsArray.length() > 0) {
+                                JSONArray popTimeDefines = null;
+                                if (timeSeriesArray.length() > 1) {
+                                    popTimeDefines = timeSeriesArray.getJSONObject(1).getJSONArray("timeDefines");
+                                }
+                                List<String> dateKeys = new ArrayList<>();
+                                List<List<Integer>> popGroups = new ArrayList<>();
+                                for (int i = 0; i < popsArray.length(); i++) {
+                                    String dateTime = popTimeDefines.getString(i);
+                                    String dateKey = dateTime.split("T")[0];
+                                    if (dateKeys.isEmpty() || !dateKeys.get(dateKeys.size() - 1).equals(dateKey)) {
+                                        dateKeys.add(dateKey);
+                                        popGroups.add(new ArrayList<>());
+                                    }
+                                    String popStr = popsArray.isNull(i) ? "-" : popsArray.getString(i);
+                                    try {
+                                        int popVal = Integer.parseInt(popStr);
+                                        popGroups.get(popGroups.size() - 1).add(popVal);
+                                    } catch (Exception e) {
+                                        // skip non-numeric
+                                    }
+                                }
+                                // 平均値計算
+                                for (List<Integer> group : popGroups) {
+                                    if (group.isEmpty()) {
+                                        avgPopList.add("-");
+                                    } else {
+                                        int sum = 0;
+                                        for (int v : group)
+                                            sum += v;
+                                        avgPopList.add(String.valueOf(Math.round((double) sum / group.size())));
+                                    }
+                                }
+                            }
+                            // popRowの生成
+                            StringBuilder popRow = new StringBuilder("| ");
+                            popRow.append(padBoth("降水確率", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                String popVal = (i < avgPopList.size()) ? avgPopList.get(i) + "%" : "-";
+                                popRow.append(" | ").append(padBoth(popVal, colWidths[i]));
+                            }
+                            popRow.append(" |");
+                            forecasts.add(new WeatherForecast(dateRow.toString(), "", "", "", ""));
+                            forecasts.add(new WeatherForecast(weatherRow.toString(), "", "", "", ""));
+                            forecasts.add(new WeatherForecast(maxTempRow.toString(), "", "", "", ""));
+                            forecasts.add(new WeatherForecast(minTempRow.toString(), "", "", "", ""));
+                            forecasts.add(new WeatherForecast(popRow.toString(), "", "", "", ""));
                         }
                     }
                 }

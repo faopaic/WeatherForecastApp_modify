@@ -19,29 +19,41 @@ import org.json.JSONObject;
  * @version 1.0.1
  */
 
-
-    public class WeatherForecastApp {
-        private static final String TARGET_URL = "https://www.jma.go.jp/bosai/forecast/data/forecast/270000.json";
+public class WeatherForecastApp {
+    private static final String TARGET_URL = "https://www.jma.go.jp/bosai/forecast/data/forecast/270000.json";
 
     public static void main(String[] args) {
         WeatherApiClient client = new WeatherApiClient(TARGET_URL);
         try {
             for (WeatherForecast forecast : client.fetchWeatherForecasts()) {
-                // 日付を yyyy/MM/dd → yyyy年M月d日 に変換
-                String[] dateParts = forecast.getDateTime().split("/");
-                if (dateParts.length == 3) {
-                    int year = Integer.parseInt(dateParts[0]);
-                    int month = Integer.parseInt(dateParts[1]);
-                    int day = Integer.parseInt(dateParts[2].split(" ")[0]);
-                    String weather = forecast.getWeather();
-                    // 天気情報が日付の後ろに含まれている場合の対応
-                    if (forecast.getDateTime().contains(" ")) {
-                        weather = forecast.getDateTime().substring(forecast.getDateTime().indexOf(" ") + 1);
+                // 日付を yyyy-MM-dd または yyyy/MM/dd → yyyy年M月d日 に変換
+                String dateStr = forecast.getDateTime();
+                String year = "", month = "", day = "";
+                if (dateStr.contains("T")) {
+                    String[] dateParts = dateStr.split("T")[0].split("-");
+                    if (dateParts.length == 3) {
+                        year = dateParts[0];
+                        month = String.valueOf(Integer.parseInt(dateParts[1]));
+                        day = String.valueOf(Integer.parseInt(dateParts[2]));
                     }
-                    System.out.println(year + "年" + month + "月" + day + "日 の天気は " + weather + " です。");
+                } else if (dateStr.contains("/")) {
+                    String[] dateParts = dateStr.split("/");
+                    if (dateParts.length == 3) {
+                        year = dateParts[0];
+                        month = String.valueOf(Integer.parseInt(dateParts[1]));
+                        day = String.valueOf(Integer.parseInt(dateParts[2].split(" ")[0]));
+                    }
+                }
+                String weather = forecast.getWeather();
+                String maxTemp = forecast.getMaxTemp();
+                String minTemp = forecast.getMinTemp();
+                String pop = forecast.getPop();
+                if (!year.isEmpty()) {
+                    System.out.println(year + "年" + month + "月" + day + "日 の天気: " + weather
+                            + " 最高気温: " + maxTemp + "℃ 最低気温: " + minTemp + "℃ 降水確率: " + pop + "%");
                 } else {
                     // フォールバック（元の出力）
-                    System.out.println(forecast.getDateTime() + " " + forecast.getWeather());
+                    System.out.println(forecast.getDateTime() );
                 }
             }
         } catch (Exception e) {
@@ -76,15 +88,36 @@ class WeatherApiClient {
             }
 
             JSONArray rootArray = new JSONArray(responseBody.toString());
-            JSONObject timeStringObject = rootArray.getJSONObject(0).optJSONArray("timeSeries").getJSONObject(0);
-
-            JSONArray timeDefinesArray = timeStringObject.getJSONArray("timeDefines");
-            JSONArray weathersArray = timeStringObject.getJSONArray("areas").getJSONObject(0).getJSONArray("weathers");
+            JSONArray timeSeries = rootArray.getJSONObject(0).getJSONArray("timeSeries");
+            // 天気
+            JSONObject weatherObj = timeSeries.getJSONObject(0);
+            JSONArray timeDefinesArray = weatherObj.getJSONArray("timeDefines");
+            JSONArray weatherAreas = weatherObj.getJSONArray("areas");
+            JSONArray weathersArray = weatherAreas.getJSONObject(0).getJSONArray("weathers");
+            // 降水確率
+            JSONArray popsArray = null;
+            if (timeSeries.length() > 1) {
+                JSONArray popAreas = timeSeries.getJSONObject(1).getJSONArray("areas");
+                popsArray = popAreas.getJSONObject(0).optJSONArray("pops");
+            }
+            // 気温
+            JSONArray tempsArray = null;
+            if (timeSeries.length() > 2) {
+                JSONArray tempAreas = timeSeries.getJSONObject(2).getJSONArray("areas");
+                tempsArray = tempAreas.getJSONObject(0).optJSONArray("temps");
+            }
 
             for (int i = 0; i < timeDefinesArray.length(); i++) {
                 String dateTimeStr = timeDefinesArray.getString(i);
-                String weather = weathersArray.getString(i);
-                forecasts.add(new WeatherForecast(dateTimeStr, weather));
+                String weather = weathersArray.optString(i, "-");
+                String pop = (popsArray != null && i < popsArray.length()) ? popsArray.optString(i, "-") : "-";
+                String maxTemp = "-";
+                String minTemp = "-";
+                if (tempsArray != null && tempsArray.length() >= (i * 2 + 2)) {
+                    minTemp = tempsArray.optString(i * 2, "-");
+                    maxTemp = tempsArray.optString(i * 2 + 1, "-");
+                }
+                forecasts.add(new WeatherForecast(dateTimeStr, weather, maxTemp, minTemp, pop));
             }
         } else {
             throw new IOException("データの取得に失敗しました！");
