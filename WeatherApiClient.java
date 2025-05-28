@@ -62,6 +62,31 @@ public class WeatherApiClient {
                             List<String> weatherList = new ArrayList<>();
                             List<String> maxTempList = new ArrayList<>();
                             List<String> minTempList = new ArrayList<>();
+                            List<String> windList = new ArrayList<>();
+                            List<String> waveList = new ArrayList<>();
+                            // 風向きと波高のデータを取得して格納
+                            if (timeSeriesArray.length() > 0) {
+                                JSONArray areas = timeSeriesArray.getJSONObject(0).optJSONArray("areas");
+                                if (areas != null && areas.length() > 0) {
+                                    JSONArray winds = areas.getJSONObject(0).optJSONArray("winds");
+                                    JSONArray waves = areas.getJSONObject(0).optJSONArray("waves");
+
+                                    if (winds != null) {
+                                        for (int i = 0; i < winds.length(); i++) {
+                                            String wind = winds.getString(i);
+                                            windList.add(convertToHalfWidth(wind)); // 全角スペースを半角スペースに変換
+                                        }
+                                    }
+
+                                    // 波高データを半角に変換して格納
+                                    if (waves != null) {
+                                        for (int i = 0; i < waves.length(); i++) {
+                                            String wave = waves.getString(i);
+                                            waveList.add(convertToHalfWidth(wave));
+                                        }
+                                    }
+                                }
+                            }
                             for (int i = 0; i < Math.min(timeDefinesArray.length(), weathersArray.length()); i++) {
                                 String dateTimeStr = timeDefinesArray.getString(i);
                                 LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr,
@@ -109,6 +134,8 @@ public class WeatherApiClient {
                                 maxLen = Math.max(maxLen, getDisplayWidth("天気"));
                                 maxLen = Math.max(maxLen, getDisplayWidth("最高気温"));
                                 maxLen = Math.max(maxLen, getDisplayWidth("最低気温"));
+                                maxLen = Math.max(maxLen, getDisplayWidth("風向き"));
+                                maxLen = Math.max(maxLen, getDisplayWidth("波高"));
                                 if (maxLen % 2 != 0)
                                     maxLen++;
                                 colWidths[i] = maxLen;
@@ -117,6 +144,8 @@ public class WeatherApiClient {
                             labelColWidth = Math.max(labelColWidth, getDisplayWidth("最低気温"));
                             labelColWidth = Math.max(labelColWidth, getDisplayWidth("天気"));
                             labelColWidth = Math.max(labelColWidth, getDisplayWidth("日付"));
+                            labelColWidth = Math.max(labelColWidth, getDisplayWidth("風向き"));
+                            labelColWidth = Math.max(labelColWidth, getDisplayWidth("波高"));
                             if (labelColWidth % 2 != 0)
                                 labelColWidth++;
                             StringBuilder dateRow = new StringBuilder("| ");
@@ -195,11 +224,33 @@ public class WeatherApiClient {
                                 popRow.append(" | ").append(padBoth(popVal, colWidths[i]));
                             }
                             popRow.append(" |");
-                            forecasts.add(new WeatherForecast(dateRow.toString(), "", "", "", ""));
-                            forecasts.add(new WeatherForecast(weatherRow.toString(), "", "", "", ""));
-                            forecasts.add(new WeatherForecast(maxTempRow.toString(), "", "", "", ""));
-                            forecasts.add(new WeatherForecast(minTempRow.toString(), "", "", "", ""));
-                            forecasts.add(new WeatherForecast(popRow.toString(), "", "", "", ""));
+                            // 風向き・波高データ取得
+
+                            // 風向きの行を追加
+                            StringBuilder windRow = new StringBuilder("| ");
+                            windRow.append(padBoth("風向き", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                String windVal = (i < windList.size()) ? windList.get(i) : "-";
+                                windRow.append(" | ").append(padBoth(windVal, colWidths[i]));
+                            }
+                            windRow.append(" |");
+
+                            // 波高の行を追加
+                            StringBuilder waveRow = new StringBuilder("| ");
+                            waveRow.append(padBoth("波高", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                String waveVal = (i < waveList.size()) ? waveList.get(i) : "-";
+                                waveRow.append(" | ").append(padBoth(waveVal, colWidths[i]));
+                            }
+                            waveRow.append(" |");
+
+                            forecasts.add(new WeatherForecast(dateRow.toString(), "", "", "", "", "", ""));
+                            forecasts.add(new WeatherForecast(weatherRow.toString(), "", "", "", "", "", ""));
+                            forecasts.add(new WeatherForecast(maxTempRow.toString(), "", "", "", "", "", ""));
+                            forecasts.add(new WeatherForecast(minTempRow.toString(), "", "", "", "", "", ""));
+                            forecasts.add(new WeatherForecast(popRow.toString(), "", "", "", "", "", ""));
+                            forecasts.add(new WeatherForecast(windRow.toString(), "", "", "", "", "", ""));
+                            forecasts.add(new WeatherForecast(waveRow.toString(), "", "", "", "", "", ""));
                         }
                     }
                 }
@@ -241,6 +292,30 @@ public class WeatherApiClient {
         sb.append(s);
         for (int i = 0; i < right; i++)
             sb.append(' ');
+        return sb.toString();
+    }
+
+    // --- 全角数字を半角数字に変換するユーティリティメソッド ---
+    private String convertToHalfWidth(String input) {
+        if (input == null)
+            return null;
+        StringBuilder sb = new StringBuilder();
+        for (char c : input.toCharArray()) {
+            // 全角数字（U+FF10 - U+FF19）を半角数字（U+0030 - U+0039）に変換
+            if (c >= '０' && c <= '９') {
+                sb.append((char) (c - '０' + '0'));
+            }
+            // 全角小数点（U+FF0E）を半角小数点（U+002E）に変換
+            else if (c == '．') {
+                sb.append('.');
+            }
+            // 全角スペース（U+3000）を半角スペース（U+0020）に変換
+            else if (c == '　') {
+                sb.append(' ');
+            } else {
+                sb.append(c);
+            }
+        }
         return sb.toString();
     }
 }
