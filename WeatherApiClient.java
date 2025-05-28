@@ -19,7 +19,8 @@ public class WeatherApiClient {
         this.apiUrl = apiUrl;
     }
 
-    public List<WeatherForecast> fetchWeatherForecasts() throws IOException {
+    // 地域名を動的に設定できるようにするため、メソッドに引数を追加
+    public List<WeatherForecast> fetchWeatherForecasts(String regionName) throws IOException {
         List<WeatherForecast> forecasts = new ArrayList<>();
         try {
             URI uri = new URI(apiUrl);
@@ -89,12 +90,13 @@ public class WeatherApiClient {
                             }
                             for (int i = 0; i < Math.min(timeDefinesArray.length(), weathersArray.length()); i++) {
                                 String dateTimeStr = timeDefinesArray.getString(i);
-                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ISO_DATE_TIME);
+                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr,
+                                        DateTimeFormatter.ISO_DATE_TIME);
                                 String dateStr = dateTime.toLocalDate().toString().replace("-", "/");
                                 String weather = weathersArray.getString(i)
-                                    .replace("/", "後")
-                                    .replace("　", " ")
-                                    .replace("時々", "時どき");
+                                        .replace("/", "後")
+                                        .replace("　", " ")
+                                        .replace("時々", "時どき");
 
                                 dateList.add(dateStr);
                                 weatherList.add(weather);
@@ -245,6 +247,16 @@ public class WeatherApiClient {
                             }
                             waveRow.append(" |");
 
+                            // 地域名の行を追加
+                            StringBuilder regionRow = new StringBuilder("| ");
+                            regionRow.append(padBoth("地域", labelColWidth));
+                            for (int i = 0; i < n; i++) {
+                                regionRow.append(" | ").append(padBoth(regionName, colWidths[i]));
+                            }
+                            regionRow.append(" |");
+
+                            // 地域名の行を最初に追加
+                            forecasts.add(new WeatherForecast(regionRow.toString(), "", "", "", "", "", ""));
                             forecasts.add(new WeatherForecast(dateRow.toString(), "", "", "", "", "", ""));
                             forecasts.add(new WeatherForecast(weatherRow.toString(), "", "", "", "", "", ""));
                             forecasts.add(new WeatherForecast(maxTempRow.toString(), "", "", "", "", "", ""));
