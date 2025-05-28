@@ -164,7 +164,7 @@
                                     .replace(/雨/g, '<span style="color:#80bfff;font-weight:bold;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;">雨</span>')
                                     .replace(/雷/g, '<span style="color:#ffff66;font-weight:bold;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;">雷</span>')
                                     .replace(/雪/g, '<span style="color:#4fd7ff;font-weight:bold;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;">雪</span>');
-                                html += `<div class=\"weather-item\"><span class=\"date\">${y}年${m}月${d}日</span>：<span class=\"weather\" style=\"color:#fff;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;\">${coloredText}</span></div>`;
+                              =======html += `<div class=\"weather-item\"><span class=\"date\" style=\"white-space:nowrap;\">${y}年${m}月${d}日</span>：<span class=\"weather\" style=\"color:#fff;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;\">${coloredText}</span></div>`;
                             }
                         });
                     } else {
@@ -222,13 +222,21 @@
                         popSeries.areas.forEach(area => {
                             if (!Array.isArray(area.pops) || area.pops.length === 0) return;
                             html += `<div class=\"area-name\">${area.area.name}</div>`;
+                            // 日付ごとに降水確率をまとめて表示
+                            const dateMap = {};
                             for (let i = 0; i < popSeries.timeDefines.length; i++) {
                                 const date = new Date(popSeries.timeDefines[i]);
                                 const y = date.getFullYear();
                                 const m = date.getMonth() + 1;
                                 const d = date.getDate();
-                                html += `<div class=\"weather-item\"><span class=\"date\">${y}年${m}月${d}日</span>：<span class=\"pop\">${area.pops[i] ?? 'データなし'}%</span></div>`;
+                                const key = `${y}年${m}月${d}日`;
+                                if (!dateMap[key]) dateMap[key] = [];
+                                dateMap[key].push((area.pops[i] ?? '-') + '%');
                             }
+                            Object.keys(dateMap).forEach(key => {
+                                const pops = dateMap[key].join(' / ');
+                                html += `<div class=\"weather-item\"><span class=\"date\">${key}</span>：<span class=\"pop\">${pops}</span></div>`;
+                            });
                         });
                     } else {
                         html += `<div>降水確率データなし</div>`;
@@ -237,49 +245,47 @@
 
                     // --- 波・風 ---
                     html += `<div class=\"weather-grid-item weather-bottom-right\"><h2>波・風</h2>`;
-                    // 波
-                    let waveSeries = null;
+                    let waveSeries = null,
+                        windSeries = null;
                     for (const s of data[0].timeSeries) {
-                        if (s.areas && s.areas.some(a => Array.isArray(a.waves) && a.waves.length > 0)) {
+                        if (!waveSeries && s.areas && s.areas.some(a => Array.isArray(a.waves) && a.waves.length > 0)) {
                             waveSeries = s;
-                            break;
                         }
-                    }
-                    if (waveSeries) {
-                        html += `<div><b>波の高さ</b></div>`;
-                        waveSeries.areas.forEach(area => {
-                            if (!Array.isArray(area.waves) || area.waves.length === 0) return;
-                            html += `<div class=\"area-name\">${area.area.name}</div>`;
-                            for (let i = 0; i < waveSeries.timeDefines.length; i++) {
-                                const date = new Date(waveSeries.timeDefines[i]);
-                                const y = date.getFullYear();
-                                const m = date.getMonth() + 1;
-                                const d = date.getDate();
-                                html += `<div class=\"weather-item\"><span class=\"date\">${y}年${m}月${d}日</span>：<span class=\"wave\">${area.waves[i] ?? 'データなし'}</span></div>`;
-                            }
-                        });
-                    }
-                    // 風
-                    let windSeries = null;
-                    for (const s of data[0].timeSeries) {
-                        if (s.areas && s.areas.some(a => Array.isArray(a.winds) && a.winds.length > 0)) {
+                        if (!windSeries && s.areas && s.areas.some(a => Array.isArray(a.winds) && a.winds.length > 0)) {
                             windSeries = s;
-                            break;
                         }
                     }
-                    if (windSeries) {
-                        html += `<div><b>風</b></div>`;
-                        windSeries.areas.forEach(area => {
-                            if (!Array.isArray(area.winds) || area.winds.length === 0) return;
-                            html += `<div class=\"area-name\">${area.area.name}</div>`;
-                            for (let i = 0; i < windSeries.timeDefines.length; i++) {
-                                const date = new Date(windSeries.timeDefines[i]);
+                    if (waveSeries || windSeries) {
+                        // area.nameのリストを作成（波・風両方に存在するareaを優先、なければどちらかにあるareaも表示）
+                        const areaNames = new Set();
+                        if (waveSeries) waveSeries.areas.forEach(a => areaNames.add(a.area.name));
+                        if (windSeries) windSeries.areas.forEach(a => areaNames.add(a.area.name));
+                        areaNames.forEach(areaName => {
+                            html += `<div class=\"area-name\">${areaName}</div>`;
+                            // 該当areaを取得
+                            const waveArea = waveSeries ? waveSeries.areas.find(a => a.area.name === areaName) : null;
+                            const windArea = windSeries ? windSeries.areas.find(a => a.area.name === areaName) : null;
+                            // 日付リスト（波・風どちらか長い方に合わせる）
+                            const timeDefines = (waveSeries && waveArea ? waveSeries.timeDefines : (windSeries && windArea ? windSeries.timeDefines : []));
+                            for (let i = 0; i < timeDefines.length; i++) {
+                                const date = new Date(timeDefines[i]);
                                 const y = date.getFullYear();
                                 const m = date.getMonth() + 1;
                                 const d = date.getDate();
-                                html += `<div class=\"weather-item\"><span class=\"date\">${y}年${m}月${d}日</span>：<span class=\"wind\">${area.winds[i] ?? 'データなし'}</span></div>`;
+                                // 波
+                                let waveValue = waveArea && Array.isArray(waveArea.waves) ? (waveArea.waves[i] ?? 'データなし') : 'データなし';
+                                waveValue = waveValue.replace(/[０-９．－]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                                waveValue = waveValue.replace(/(メートル|ﾒｰﾄﾙ|ｍ|m)/gi, '').trim();
+                                if (waveValue !== 'データなし' && waveValue !== '') {
+                                    waveValue += 'm';
+                                }
+                                // 風
+                                let windValue = windArea && Array.isArray(windArea.winds) ? (windArea.winds[i] ?? 'データなし') : 'データなし';
+                                html += `<div class=\"weather-item\"><span class=\"date\" style=\"white-space:nowrap;\">${y}年${m}月${d}日</span>：<span class=\"wave\">${waveValue}</span> ／ <span class=\"wind\">${windValue}</span></div>`;
                             }
                         });
+                    } else {
+                        html += `<div>波・風データなし</div>`;
                     }
                     html += `</div>`; // weather-bottom-right
 
