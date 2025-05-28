@@ -25,7 +25,8 @@ public class WeatherForecastApp {
     public static void main(String[] args) {
         WeatherApiClient client = new WeatherApiClient(TARGET_URL);
         try {
-            for (WeatherForecast forecast : client.fetchWeatherForecasts()) {
+            // 地域名を指定して天気予報を取得するように変更
+            for (WeatherForecast forecast : client.fetchWeatherForecasts("大阪")) {
                 // 日付を yyyy-MM-dd または yyyy/MM/dd → yyyy年M月d日 に変換
                 String dateStr = forecast.getDateTime();
                 String year = "", month = "", day = "";
@@ -72,7 +73,7 @@ class WeatherApiClient {
         this.targetUrl = targetUrl;
     }
 
-    public List<WeatherForecast> fetchWeatherForecasts() throws IOException, URISyntaxException {
+    public List<WeatherForecast> fetchWeatherForecasts(String region) throws IOException, URISyntaxException {
         List<WeatherForecast> forecasts = new ArrayList<>();
         URI uri = new URI(targetUrl);
         URL url = uri.toURL();
