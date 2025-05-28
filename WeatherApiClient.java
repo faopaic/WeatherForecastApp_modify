@@ -89,12 +89,13 @@ public class WeatherApiClient {
                             }
                             for (int i = 0; i < Math.min(timeDefinesArray.length(), weathersArray.length()); i++) {
                                 String dateTimeStr = timeDefinesArray.getString(i);
-                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr,
-                                        DateTimeFormatter.ISO_DATE_TIME);
+                                LocalDateTime dateTime = LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ISO_DATE_TIME);
                                 String dateStr = dateTime.toLocalDate().toString().replace("-", "/");
                                 String weather = weathersArray.getString(i)
-                                        .replace("/", "後")
-                                        .replace("　", " ");
+                                    .replace("/", "後")
+                                    .replace("　", " ")
+                                    .replace("時々", "時どき");
+
                                 dateList.add(dateStr);
                                 weatherList.add(weather);
                                 // 気温データ取得（偶数:最低, 奇数:最高）
