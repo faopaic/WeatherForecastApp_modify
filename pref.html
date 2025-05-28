@@ -179,12 +179,23 @@
                         tempSeries.areas.forEach(area => {
                             if (!Array.isArray(area.temps) || area.temps.length === 0) return;
                             html += `<div class=\"area-name\">${area.area.name}</div>`;
-                            for (let i = 0; i < tempSeries.timeDefines.length; i++) {
+                            // 2日分ごとに最低・最高をセットで表示
+                            for (let i = 0; i < tempSeries.timeDefines.length; i += 2) {
                                 const date = new Date(tempSeries.timeDefines[i]);
                                 const y = date.getFullYear();
                                 const m = date.getMonth() + 1;
                                 const d = date.getDate();
-                                html += `<div class=\"weather-item\"><span class=\"date\">${y}年${m}月${d}日</span>：<span class=\"temp\">${area.temps[i] ?? 'データなし'}℃</span></div>`;
+                                const min = area.temps[i];
+                                const max = area.temps[i + 1];
+                                // 最低気温
+                                if (min !== undefined) {
+                                    const minDisplay = (min !== undefined && max !== undefined && min === max) ? '-' : `${min}℃`;
+                                    html += `<div class=\"weather-item\" style=\"background:#eaf4fb;\"><b>${y}年${m}月${d}日</b> ： <span class=\"temp\">${minDisplay}</span> <span style=\"color:#007acc;\">（最低）</span></div>`;
+                                }
+                                // 最高気温
+                                if (max !== undefined) {
+                                    html += `<div class=\"weather-item\" style=\"background:#eaf4fb;\"><b>${y}年${m}月${d}日</b> ： <span class=\"temp\">${max}℃</span> <span style=\"color:#e67e22;\">（最高）</span></div>`;
+                                }
                             }
                         });
                     } else {
