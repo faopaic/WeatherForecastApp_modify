@@ -156,7 +156,15 @@
                                 const y = date.getFullYear();
                                 const m = date.getMonth() + 1;
                                 const d = date.getDate();
-                                html += `<div class=\"weather-item\"><span class=\"date\" style=\"white-space:nowrap;\">${y}年${m}月${d}日</span>：<span class=\"weather\">${area.weathers[i] ?? 'データなし'}</span></div>`;
+                                let weatherText = area.weathers[i] ?? 'データなし';
+                                // 部分色分け
+                                let coloredText = weatherText
+                                    .replace(/晴れ/g, '<span style="color:#ffbe4d;font-weight:bold;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;">晴れ</span>')
+                                    .replace(/くもり|曇/g, '<span style="color:#b3b3b3;font-weight:bold;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;">$&</span>')
+                                    .replace(/雨/g, '<span style="color:#80bfff;font-weight:bold;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;">雨</span>')
+                                    .replace(/雷/g, '<span style="color:#ffff66;font-weight:bold;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;">雷</span>')
+                                    .replace(/雪/g, '<span style="color:#4fd7ff;font-weight:bold;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;">雪</span>');
+                                html += `<div class=\"weather-item\"><span class=\"date\" style=\"white-space:nowrap;\">${y}年${m}月${d}日</span>：<span class=\"weather\" style=\"color:#fff;text-shadow:0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000;\">${coloredText}</span></div>`;
                             }
                         });
                     } else {
