@@ -6,6 +6,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>天気予報</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .weather-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+            min-height: 80vh;
+            box-sizing: border-box;
+        }
+
+        .weather-grid-item {
+            background: #f5f7fa;
+            border-radius: 10px;
+            padding: 18px 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            overflow-y: auto;
+        }
+
+        .weather-top-left {
+            grid-column: 1 / 2;
+            grid-row: 1 / 2;
+        }
+
+        .weather-top-right {
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+        }
+
+        .weather-bottom-left {
+            grid-column: 1 / 2;
+            grid-row: 2 / 3;
+        }
+
+        .weather-bottom-right {
+            grid-column: 2 / 3;
+            grid-row: 2 / 3;
+        }
+
+        @media (max-width: 900px) {
+            .weather-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, auto);
+            }
+
+            .weather-top-left,
+            .weather-top-right,
+            .weather-bottom-left,
+            .weather-bottom-right {
+                grid-column: 1 / 2;
+            }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 
 <body>
@@ -76,21 +134,159 @@
             fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${pref.code}.json`)
                 .then(res => res.json())
                 .then(data => {
-                    const area = data[0].timeSeries[0].areas[0];
-                    const dates = data[0].timeSeries[0].timeDefines;
-                    const weathers = area.weathers;
+                    console.log('取得データ', data); // デバッグ用
                     let html = '';
-                    for (let i = 0; i < dates.length; i++) {
-                        const date = new Date(dates[i]);
-                        const y = date.getFullYear();
-                        const m = date.getMonth() + 1;
-                        const d = date.getDate();
-                        html += `<div class="weather-item"><span class="date">${y}年${m}月${d}日</span> の天気は <span class="weather">${weathers[i]}</span> です。</div>`;
+                    html += `<div class="weather-grid">`;
+
+                    // --- 天気 ---
+                    html += `<div class="weather-grid-item weather-top-left"><h2>天気</h2>`;
+                    let weatherSeries = null;
+                    for (const s of data[0].timeSeries) {
+                        if (s.areas && s.areas.some(a => Array.isArray(a.weathers) && a.weathers.length > 0)) {
+                            weatherSeries = s;
+                            break;
+                        }
+                    }
+                    if (weatherSeries) {
+                        weatherSeries.areas.forEach(area => {
+                            if (!Array.isArray(area.weathers) || area.weathers.length === 0) return;
+                            html += `<div class=\"area-name\">${area.area.name}</div>`;
+                            for (let i = 0; i < weatherSeries.timeDefines.length; i++) {
+                                const date = new Date(weatherSeries.timeDefines[i]);
+                                const y = date.getFullYear();
+                                const m = date.getMonth() + 1;
+                                const d = date.getDate();
+                                html += `<div class=\"weather-item\"><span class=\"date\">${y}年${m}月${d}日</span>：<span class=\"weather\">${area.weathers[i] ?? 'データなし'}</span></div>`;
+                            }
+                        });
+                    } else {
+                        html += `<div>天気データなし</div>`;
+                    }
+                    html += `</div>`;
+
+                    // --- 気温 ---
+                    html += `<div class=\"weather-grid-item weather-top-right\"><h2>気温</h2>`;
+                    let tempSeries = null;
+                    for (const s of data[0].timeSeries) {
+                        if (s.areas && s.areas.some(a => Array.isArray(a.temps) && a.temps.length > 0)) {
+                            tempSeries = s;
+                            break;
+                        }
+                    }
+                    if (tempSeries) {
+                        tempSeries.areas.forEach(area => {
+                            if (!Array.isArray(area.temps) || area.temps.length === 0) return;
+                            html += `<div class=\"area-name\">${area.area.name}</div>`;
+                            // 2日分ごとに最低・最高をセットで表示
+                            for (let i = 0; i < tempSeries.timeDefines.length; i += 2) {
+                                const date = new Date(tempSeries.timeDefines[i]);
+                                const y = date.getFullYear();
+                                const m = date.getMonth() + 1;
+                                const d = date.getDate();
+                                const min = area.temps[i];
+                                const max = area.temps[i + 1];
+                                // 最低気温
+                                if (min !== undefined) {
+                                    const minDisplay = (min !== undefined && max !== undefined && min === max) ? '-' : `${min}℃`;
+                                    html += `<div class=\"weather-item\" style=\"background:#eaf4fb;\"><b>${y}年${m}月${d}日</b> ： <span class=\"temp\">${minDisplay}</span> <span style=\"color:#007acc;\">（最低）</span></div>`;
+                                }
+                                // 最高気温
+                                if (max !== undefined) {
+                                    html += `<div class=\"weather-item\" style=\"background:#eaf4fb;\"><b>${y}年${m}月${d}日</b> ： <span class=\"temp\">${max}℃</span> <span style=\"color:#e67e22;\">（最高）</span></div>`;
+                                }
+                            }
+                        });
+                    } else {
+                        html += `<div>気温データなし</div>`;
+                    }
+                    html += `</div>`;
+
+                    // --- 降水確率 ---
+                    html += `<div class=\"weather-grid-item weather-bottom-left\"><h2>降水確率</h2>`;
+                    let popSeries = null;
+                    for (const s of data[0].timeSeries) {
+                        if (s.areas && s.areas.some(a => Array.isArray(a.pops) && a.pops.length > 0)) {
+                            popSeries = s;
+                            break;
+                        }
+                    }
+                    if (popSeries) {
+                        popSeries.areas.forEach(area => {
+                            if (!Array.isArray(area.pops) || area.pops.length === 0) return;
+                            html += `<div class=\"area-name\">${area.area.name}</div>`;
+                            for (let i = 0; i < popSeries.timeDefines.length; i++) {
+                                const date = new Date(popSeries.timeDefines[i]);
+                                const y = date.getFullYear();
+                                const m = date.getMonth() + 1;
+                                const d = date.getDate();
+                                html += `<div class=\"weather-item\"><span class=\"date\">${y}年${m}月${d}日</span>：<span class=\"pop\">${area.pops[i] ?? 'データなし'}%</span></div>`;
+                            }
+                        });
+                    } else {
+                        html += `<div>降水確率データなし</div>`;
+                    }
+                    html += `</div>`;
+
+                    // --- 波・風 ---
+                    html += `<div class=\"weather-grid-item weather-bottom-right\"><h2>波・風</h2>`;
+                    // 波
+                    let waveSeries = null;
+                    for (const s of data[0].timeSeries) {
+                        if (s.areas && s.areas.some(a => Array.isArray(a.waves) && a.waves.length > 0)) {
+                            waveSeries = s;
+                            break;
+                        }
+                    }
+                    if (waveSeries) {
+                        html += `<div><b>波の高さ</b></div>`;
+                        waveSeries.areas.forEach(area => {
+                            if (!Array.isArray(area.waves) || area.waves.length === 0) return;
+                            html += `<div class=\"area-name\">${area.area.name}</div>`;
+                            for (let i = 0; i < waveSeries.timeDefines.length; i++) {
+                                const date = new Date(waveSeries.timeDefines[i]);
+                                const y = date.getFullYear();
+                                const m = date.getMonth() + 1;
+                                const d = date.getDate();
+                                html += `<div class=\"weather-item\"><span class=\"date\">${y}年${m}月${d}日</span>：<span class=\"wave\">${area.waves[i] ?? 'データなし'}</span></div>`;
+                            }
+                        });
+                    }
+                    // 風
+                    let windSeries = null;
+                    for (const s of data[0].timeSeries) {
+                        if (s.areas && s.areas.some(a => Array.isArray(a.winds) && a.winds.length > 0)) {
+                            windSeries = s;
+                            break;
+                        }
+                    }
+                    if (windSeries) {
+                        html += `<div><b>風</b></div>`;
+                        windSeries.areas.forEach(area => {
+                            if (!Array.isArray(area.winds) || area.winds.length === 0) return;
+                            html += `<div class=\"area-name\">${area.area.name}</div>`;
+                            for (let i = 0; i < windSeries.timeDefines.length; i++) {
+                                const date = new Date(windSeries.timeDefines[i]);
+                                const y = date.getFullYear();
+                                const m = date.getMonth() + 1;
+                                const d = date.getDate();
+                                html += `<div class=\"weather-item\"><span class=\"date\">${y}年${m}月${d}日</span>：<span class=\"wind\">${area.winds[i] ?? 'データなし'}</span></div>`;
+                            }
+                        });
+                    }
+                    html += `</div>`; // weather-bottom-right
+
+                    html += `</div>`; // weather-grid
+                    // 概況や詳細情報
+                    if (data[0].text) {
+                        for (const key in data[0].text) {
+                            html += `<div class=\"series-block\"><h2>${key}</h2><div>${data[0].text[key]}</div></div>`;
+                        }
                     }
                     document.getElementById('weather-list').innerHTML = html;
                 })
-                .catch(() => {
+                .catch((err) => {
                     document.getElementById('weather-list').textContent = '天気予報データの取得に失敗しました。';
+                    console.error('天気予報データ取得エラー', err);
                 });
         }
     </script>
