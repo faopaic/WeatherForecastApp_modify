@@ -133,6 +133,8 @@ public class WeatherApiClient {
                                 maxLen = Math.max(maxLen, getDisplayWidth(weatherList.get(i)));
                                 maxLen = Math.max(maxLen, getDisplayWidth(maxTempList.get(i)));
                                 maxLen = Math.max(maxLen, getDisplayWidth(minTempList.get(i)));
+                                maxLen = Math.max(maxLen, getDisplayWidth(windList.get(i)));
+                                maxLen = Math.max(maxLen, getDisplayWidth(waveList.get(i)));
                                 maxLen = Math.max(maxLen, getDisplayWidth("日付"));
                                 maxLen = Math.max(maxLen, getDisplayWidth("天気"));
                                 maxLen = Math.max(maxLen, getDisplayWidth("最高気温"));
