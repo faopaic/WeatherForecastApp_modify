@@ -289,6 +289,8 @@
                     }
                     html += `</div>`; // weather-bottom-right
 
+                    // --- 注意報・警報 ---
+                    html += `<div class=\"weather-grid-item weather-bottom-extra\"><h2>注意報・警報</h2><div id=\"warn-area\">取得中...</div></div>`;
                     html += `</div>`; // weather-grid
                     // 概況や詳細情報
                     if (data[0].text) {
@@ -297,6 +299,32 @@
                         }
                     }
                     document.getElementById('weather-list').innerHTML = html;
+
+                    // 注意報・警報データ取得＆表示
+                    fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${pref.code}.json`)
+                        .then(res => res.json())
+                        .then(warningData => {
+                            let warnHtml = '';
+                            if (warningData && warningData.warnings && warningData.warnings.length > 0) {
+                                warningData.warnings.forEach(w => {
+                                    warnHtml += `<div class=\"area-name\">${w.area.name}</div>`;
+                                    if (w.infos && w.infos.length > 0) {
+                                        w.infos.forEach(info => {
+                                            let statusColor = info.status === '発表' ? '#e74c3c' : (info.status === '解除' ? '#3498db' : '#f1c40f');
+                                            warnHtml += `<div class=\"weather-item\" style=\"background:#fff3e6;\"><span class=\"warn-kind\" style=\"color:${statusColor};font-weight:bold;\">${info.kind.name}</span>：<span class=\"warn-status\">${info.status}</span></div>`;
+                                        });
+                                    } else {
+                                        warnHtml += `<div>注意報・警報なし</div>`;
+                                    }
+                                });
+                            } else {
+                                warnHtml += `<div>注意報・警報なし</div>`;
+                            }
+                            document.getElementById('warn-area').innerHTML = warnHtml;
+                        })
+                        .catch(() => {
+                            document.getElementById('warn-area').innerHTML = '<div>注意報・警報データ取得失敗</div>';
+                        });
                 })
                 .catch((err) => {
                     document.getElementById('weather-list').textContent = '天気予報データの取得に失敗しました。';
