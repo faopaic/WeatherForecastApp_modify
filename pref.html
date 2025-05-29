@@ -309,20 +309,8 @@
                         .then(res => res.json())
                         .then(warningData => {
                             let warnHtml = '';
-                            if (warningData && warningData.warnings && warningData.warnings.length > 0) {
-                                warningData.warnings.forEach(w => {
-                                    warnHtml += `<div class=\"area-name\">${w.area.name}</div>`;
-                                    if (w.infos && w.infos.length > 0) {
-                                        w.infos.forEach(info => {
-                                            let statusColor = info.status === '発表' ? '#e74c3c' : (info.status === '解除' ? '#3498db' : '#f1c40f');
-                                            warnHtml += `<div class=\"weather-item\" style=\"background:#fff3e6;\"><span class=\"warn-kind\" style=\"color:${statusColor};font-weight:bold;\">${info.kind.name}</span>：<span class=\"warn-status\">${info.status}</span></div>`;
-                                        });
-                                    } else {
-                                        warnHtml += `<div>注意報・警報なし</div>`;
-                                    }
-                                });
-                            } else {
-                                warnHtml += `<div>注意報・警報なし</div>`;
+                            if (warningData && warningData.headlineText) {
+                                warnHtml += `<div class=\"warn-headline\">${warningData.headlineText}</div>`;
                             }
                             document.getElementById('warn-area').innerHTML = warnHtml;
                         })
