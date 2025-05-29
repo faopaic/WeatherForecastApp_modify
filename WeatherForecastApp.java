@@ -92,8 +92,8 @@ public class WeatherForecastApp {
             int zenkaku = 0;
             for (char c : name.toCharArray()) {
                 if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS ||
-                    Character.UnicodeBlock.of(c) == Character.UnicodeBlock.HIRAGANA ||
-                    Character.UnicodeBlock.of(c) == Character.UnicodeBlock.KATAKANA) {
+                        Character.UnicodeBlock.of(c) == Character.UnicodeBlock.HIRAGANA ||
+                        Character.UnicodeBlock.of(c) == Character.UnicodeBlock.KATAKANA) {
                     zenkaku += 2;
                 } else {
                     zenkaku += 1;
@@ -101,14 +101,16 @@ public class WeatherForecastApp {
             }
             int pad = 8 - zenkaku; // 8幅に揃える
             StringBuilder sb = new StringBuilder(name);
-            for (int j = 0; j < pad; j++) sb.append(' ');
+            for (int j = 0; j < pad; j++)
+                sb.append(' ');
             System.out.printf("%2d: %s ", i + 1, sb.toString()); // ←ここで末尾に半角スペース
             col++;
             if (col % 5 == 0) {
                 System.out.println();
             }
         }
-        if (col % 5 != 0) System.out.println();
+        if (col % 5 != 0)
+            System.out.println();
         System.out.println("---------------------------------------------");
         int selected = -1;
         while (selected < 1 || selected > PREF_CODE_MAP.size()) {
@@ -126,7 +128,8 @@ public class WeatherForecastApp {
         WeatherApiClient client = new WeatherApiClient(targetUrl);
         try {
             // 地域名を指定して天気予報を取得するように変更
-            for (WeatherForecast forecast : client.fetchWeatherForecasts(prefName.replace("県", "").replace("府", "").replace("都", ""))) {
+            for (WeatherForecast forecast : client
+                    .fetchWeatherForecasts(prefName.replace("県", "").replace("府", "").replace("都", ""))) {
                 // 日付を yyyy-MM-dd または yyyy/MM/dd → yyyy年M月d日 に変換
                 String dateStr = forecast.getDateTime();
                 String year = "", month = "", day = "";
