@@ -6,7 +6,10 @@ import java.net.URL;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,13 +23,110 @@ import org.json.JSONObject;
  */
 
 public class WeatherForecastApp {
-    private static final String TARGET_URL = "https://www.jma.go.jp/bosai/forecast/data/forecast/270000.json";
+    // 都道府県コードマップ（主要47都道府県）
+    private static final Map<String, String> PREF_CODE_MAP = new LinkedHashMap<>();
+    static {
+        PREF_CODE_MAP.put("北海道", "016000");
+        PREF_CODE_MAP.put("青森県", "020000");
+        PREF_CODE_MAP.put("岩手県", "030000");
+        PREF_CODE_MAP.put("宮城県", "040000");
+        PREF_CODE_MAP.put("秋田県", "050000");
+        PREF_CODE_MAP.put("山形県", "060000");
+        PREF_CODE_MAP.put("福島県", "070000");
+        PREF_CODE_MAP.put("茨城県", "080000");
+        PREF_CODE_MAP.put("栃木県", "090000");
+        PREF_CODE_MAP.put("群馬県", "100000");
+        PREF_CODE_MAP.put("埼玉県", "110000");
+        PREF_CODE_MAP.put("千葉県", "120000");
+        PREF_CODE_MAP.put("東京都", "130000");
+        PREF_CODE_MAP.put("神奈川県", "140000");
+        PREF_CODE_MAP.put("新潟県", "150000");
+        PREF_CODE_MAP.put("富山県", "160000");
+        PREF_CODE_MAP.put("石川県", "170000");
+        PREF_CODE_MAP.put("福井県", "180000");
+        PREF_CODE_MAP.put("山梨県", "190000");
+        PREF_CODE_MAP.put("長野県", "200000");
+        PREF_CODE_MAP.put("岐阜県", "210000");
+        PREF_CODE_MAP.put("静岡県", "220000");
+        PREF_CODE_MAP.put("愛知県", "230000");
+        PREF_CODE_MAP.put("三重県", "240000");
+        PREF_CODE_MAP.put("滋賀県", "250000");
+        PREF_CODE_MAP.put("京都府", "260000");
+        PREF_CODE_MAP.put("大阪府", "270000");
+        PREF_CODE_MAP.put("兵庫県", "280000");
+        PREF_CODE_MAP.put("奈良県", "290000");
+        PREF_CODE_MAP.put("和歌山県", "300000");
+        PREF_CODE_MAP.put("鳥取県", "310000");
+        PREF_CODE_MAP.put("島根県", "320000");
+        PREF_CODE_MAP.put("岡山県", "330000");
+        PREF_CODE_MAP.put("広島県", "340000");
+        PREF_CODE_MAP.put("山口県", "350000");
+        PREF_CODE_MAP.put("徳島県", "360000");
+        PREF_CODE_MAP.put("香川県", "370000");
+        PREF_CODE_MAP.put("愛媛県", "380000");
+        PREF_CODE_MAP.put("高知県", "390000");
+        PREF_CODE_MAP.put("福岡県", "400000");
+        PREF_CODE_MAP.put("佐賀県", "410000");
+        PREF_CODE_MAP.put("長崎県", "420000");
+        PREF_CODE_MAP.put("熊本県", "430000");
+        PREF_CODE_MAP.put("大分県", "440000");
+        PREF_CODE_MAP.put("宮崎県", "450000");
+        PREF_CODE_MAP.put("鹿児島県", "460100");
+        PREF_CODE_MAP.put("沖縄県", "471000");
+    }
 
     public static void main(String[] args) {
-        WeatherApiClient client = new WeatherApiClient(TARGET_URL);
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("都道府県を選択してください：");
+        String[] prefNames = new String[PREF_CODE_MAP.size()];
+        // prefNames配列を正しく初期化
+        int i = 0;
+        for (String name : PREF_CODE_MAP.keySet()) {
+            prefNames[i++] = name;
+        }
+        System.out.println("---------------------------------------------");
+        int col = 0;
+        for (i = 0; i < prefNames.length; i++) {
+            String name = prefNames[i];
+            // 全角幅を考慮して都道府県名の後ろに必要なスペースを追加
+            int zenkaku = 0;
+            for (char c : name.toCharArray()) {
+                if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS ||
+                    Character.UnicodeBlock.of(c) == Character.UnicodeBlock.HIRAGANA ||
+                    Character.UnicodeBlock.of(c) == Character.UnicodeBlock.KATAKANA) {
+                    zenkaku += 2;
+                } else {
+                    zenkaku += 1;
+                }
+            }
+            int pad = 8 - zenkaku; // 8幅に揃える
+            StringBuilder sb = new StringBuilder(name);
+            for (int j = 0; j < pad; j++) sb.append(' ');
+            System.out.printf("%2d: %s ", i + 1, sb.toString()); // ←ここで末尾に半角スペース
+            col++;
+            if (col % 5 == 0) {
+                System.out.println();
+            }
+        }
+        if (col % 5 != 0) System.out.println();
+        System.out.println("---------------------------------------------");
+        int selected = -1;
+        while (selected < 1 || selected > PREF_CODE_MAP.size()) {
+            System.out.print("番号を入力: ");
+            String input = scanner.nextLine();
+            try {
+                selected = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                selected = -1;
+            }
+        }
+        String prefName = prefNames[selected - 1];
+        String prefCode = PREF_CODE_MAP.get(prefName);
+        String targetUrl = "https://www.jma.go.jp/bosai/forecast/data/forecast/" + prefCode + ".json";
+        WeatherApiClient client = new WeatherApiClient(targetUrl);
         try {
             // 地域名を指定して天気予報を取得するように変更
-            for (WeatherForecast forecast : client.fetchWeatherForecasts("大阪")) {
+            for (WeatherForecast forecast : client.fetchWeatherForecasts(prefName.replace("県", "").replace("府", "").replace("都", ""))) {
                 // 日付を yyyy-MM-dd または yyyy/MM/dd → yyyy年M月d日 に変換
                 String dateStr = forecast.getDateTime();
                 String year = "", month = "", day = "";
@@ -63,6 +163,7 @@ public class WeatherForecastApp {
         } catch (Exception e) {
             System.out.println("天気予報の取得に失敗しました: " + e.getMessage());
         }
+        scanner.close();
     }
 }
 
