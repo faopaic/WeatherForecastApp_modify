@@ -11,7 +11,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            gap: 24px;
+            gap: 12px;
             width: 100%;
             min-height: 80vh;
             box-sizing: border-box;
@@ -23,26 +23,13 @@
             padding: 18px 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             overflow-y: auto;
+            margin-bottom: 1px;
+            /* ボックス下部に余白追加 */
         }
 
-        .weather-top-left {
-            grid-column: 1 / 2;
-            grid-row: 1 / 2;
-        }
-
-        .weather-top-right {
-            grid-column: 2 / 3;
-            grid-row: 1 / 2;
-        }
-
-        .weather-bottom-left {
-            grid-column: 1 / 2;
-            grid-row: 2 / 3;
-        }
-
-        .weather-bottom-right {
-            grid-column: 2 / 3;
-            grid-row: 2 / 3;
+        .weather-bottom-extra {
+            margin-top: 10px !important;
+            /* 注意報・警報ボックスの上に余白追加 */
         }
 
         @media (max-width: 900px) {
@@ -51,11 +38,12 @@
                 grid-template-rows: repeat(4, auto);
             }
 
-            .weather-top-left,
-            .weather-top-right,
-            .weather-bottom-left,
-            .weather-bottom-right {
-                grid-column: 1 / 2;
+            .weather-grid-item {
+                margin-bottom: 32px;
+            }
+
+            .weather-bottom-extra {
+                margin-top: 32px !important;
             }
         }
 
@@ -284,8 +272,27 @@
                                 }
                                 // 風
                                 let windValue = windArea && Array.isArray(windArea.winds) ? (windArea.winds[i] ?? 'データなし') : 'データなし';
+                                // 全角スペースを半角スペースに変換
+                                waveValue = waveValue.replace(/　/g, ' ');
+                                windValue = windValue.replace(/　/g, ' ');
                                 // 波・風の区切りを「／」から「|<br>|<br>|<br>」に変更
-                                html += `<div class=\"weather-item\"><span class=\"date\" style=\"white-space:nowrap;\">${y}年${m}月${d}日：</span><span class=\"wave\">${waveValue}</span> |<br>|<br>|<br><span class=\"wind\">${windValue}</span></div>`;
+                                // 波・風の値を固定長（全角8文字）で表示
+                                function padFixed(str, len) {
+                                    // 全角・半角混在対応
+                                    let s = str + '';
+                                    let count = 0;
+                                    for (let i = 0; i < s.length; i++) {
+                                        const c = s[i];
+                                        count += (c.match(/[ -~｡-ﾟ]/)) ? 1 : 2; // 半角1, 全角2
+                                    }
+                                    // 足りない分は全角スペースで埋める
+                                    while (count < len * 2) {
+                                        s += '　';
+                                        count += 2;
+                                    }
+                                    return s;
+                                }
+                                html += `<div class=\"weather-item\"><span class=\"date\" style=\"white-space:nowrap;\">${y}年${m}月${d}日：</span><span class=\"wave\">${padFixed(waveValue, 6)}</span> |<br>|<br>|<br><span class=\"wind\">${padFixed(windValue, 6)}</span></div>`;
                             }
                         });
                     } else {
@@ -294,7 +301,7 @@
                     html += `</div>`; // weather-bottom-right
 
                     // --- 注意報・警報 ---
-                    html += `<div class=\"weather-grid-item weather-bottom-extra\"><h2>注意報・警報</h2><div id=\"warn-area\">取得中...</div></div>`;
+                    // ここは何も出力しない（fetchで必要な場合のみ追加）
                     html += `</div>`; // weather-grid
                     // 概況や詳細情報
                     if (data[0].text) {
@@ -304,18 +311,40 @@
                     }
                     document.getElementById('weather-list').innerHTML = html;
 
+                    let warningHtml = '';
                     // 注意報・警報データ取得＆表示
                     fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${pref.code}.json`)
                         .then(res => res.json())
                         .then(warningData => {
-                            let warnHtml = '';
                             if (warningData && warningData.headlineText) {
-                                warnHtml += `<div class=\"warn-headline\">${warningData.headlineText}</div>`;
+                                const text = warningData.headlineText.trim();
+                                if (
+                                    text !== '' &&
+                                    text !== '注意報を解除します。' &&
+                                    text !== '警報・注意報は発表されていません' &&
+                                    text !== '警報・注意報はありません'
+                                ) {
+                                    // 警報・注意報の内容に応じてgifを表示
+                                    let boxBgStyle = '';
+                                    let warnTextStyle = '';
+                                    if (text.includes('風')) {
+                                        boxBgStyle = 'background-image:url(\'img/treewind.gif\');background-size:100% 100%;background-repeat:no-repeat;background-position:center center;';
+                                    }
+                                    if (text.includes('雨')) {
+                                        boxBgStyle = 'background-image:url(\'img/rainy1.gif\');background-size:100% 100%;background-repeat:no-repeat;background-position:center center;';
+                                    }
+                                    if (text.includes('雷')) {
+                                        boxBgStyle = 'background-image:url(\'img/raiu.gif\');background-size:100% 100%;background-repeat:no-repeat;background-position:center center;';
+                                        warnTextStyle = 'color:#fff;text-shadow:0 0 4px #000,0 0 8px #000;';
+                                    }
+                                    warningHtml = `<div class=\"weather-grid-item weather-bottom-extra weather-warning-top\" style=\"${boxBgStyle}\"><h2>注意報・警報</h2><div id=\"warn-area\"><div class=\"warn-headline\" style=\"${warnTextStyle}\">${text}</div></div></div>`;
+                                }
                             }
-                            document.getElementById('warn-area').innerHTML = warnHtml;
+                            // 注意報・警報を先頭に、その後に天気グリッドを表示
+                            document.getElementById('weather-list').innerHTML = warningHtml + html;
                         })
                         .catch(() => {
-                            document.getElementById('warn-area').innerHTML = '<div>注意報・警報データ取得失敗</div>';
+                            document.getElementById('weather-list').innerHTML = html;
                         });
                 })
                 .catch((err) => {

@@ -508,7 +508,7 @@ button:hover {
     background: #f8f9fa;
     border: 2px solid #b0b0b0;
     border-radius: 12px;
-    padding: 24px 16px;
+    padding: 12px 12px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -581,6 +581,16 @@ button:hover {
     padding: 12px;
     background: #e9ecef;
     border-radius: 8px;
+}
+
+/* 注意報・警報ボックス下の余白を追加 */
+.weather-warning-top {
+    margin-bottom: 21px !important;
+}
+
+/* 天気グリッドの上部余白も追加 */
+.weather-grid {
+    margin-top: 1 !important;
 }
 
 @media screen and (max-width:782px) {
