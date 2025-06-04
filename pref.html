@@ -193,6 +193,8 @@
                                 }
                             }
                         });
+                        // 気温ボックスの最下部にjapanmap.htmlへ遷移するボタンを追加
+                        html += `<div style=\"text-align:center;margin-top:12px;\"><button onclick=\"location.href='japanmap.html'\" style=\"padding:8px 20px;font-size:1em;border-radius:6px;background:#007acc;color:#fff;border:none;cursor:pointer;\">都道府県マップへ</button></div>`;
                     } else {
                         html += `<div>気温データなし</div>`;
                     }
@@ -329,13 +331,18 @@
                                     let warnTextStyle = '';
                                     if (text.includes('風')) {
                                         boxBgStyle = 'background-image:url(\'img/treewind.gif\');background-size:100% 100%;background-repeat:no-repeat;background-position:center center;';
+                                        warnTextStyle = 'color:#fff;text-shadow:0 0 4px #000,0 0 8px #000;';
                                     }
-                                    if (text.includes('雨')) {
+                                    else if (text.includes('雨')) {
                                         boxBgStyle = 'background-image:url(\'img/rainy1.gif\');background-size:100% 100%;background-repeat:no-repeat;background-position:center center;';
+                                        warnTextStyle = 'color:#fff;text-shadow:0 0 4px #000,0 0 8px #000;';
                                     }
-                                    if (text.includes('雷')) {
+                                    else if (text.includes('雷')) {
                                         boxBgStyle = 'background-image:url(\'img/raiu.gif\');background-size:100% 100%;background-repeat:no-repeat;background-position:center center;';
                                         warnTextStyle = 'color:#fff;text-shadow:0 0 4px #000,0 0 8px #000;';
+                                    }
+                                    else if (text.includes('濃霧')) {
+                                        boxBgStyle = 'background-image:url(\'img/giphy.gif\');background-size:100% 100%;background-repeat:no-repeat;background-position:center center;';
                                     }
                                     warningHtml = `<div class=\"weather-grid-item weather-bottom-extra weather-warning-top\" style=\"${boxBgStyle}\"><h2>注意報・警報</h2><div id=\"warn-area\"><div class=\"warn-headline\" style=\"${warnTextStyle}\">${text}</div></div></div>`;
                                 }
