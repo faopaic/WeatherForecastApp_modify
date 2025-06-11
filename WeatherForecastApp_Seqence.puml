@@ -11,9 +11,10 @@ App -> User: 都道府県リストを表示
 User -> App: 都道府県を選択
 App -> Client: 天気データを取得
 Client -> Client: APIに接続
+Client -> Client: 天気データを解析
+Client -> Forecast: 予報オブジェクトを生成
+Forecast -> Client: 生成完了
 Client -> App: 天気データを返す
-App -> Forecast: 天気データを解析
-Forecast -> App: 予報オブジェクトを返す
 App -> User: 天気予報を表示
 
 @enduml
