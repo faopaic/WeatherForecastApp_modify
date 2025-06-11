@@ -1,0 +1,17 @@
+@startuml
+
+title 天気予報ユースケース図
+
+actor ユーザー
+
+package "天気予報アプリ" {
+    usecase "都道府県を選択" as UC1
+    usecase "天気データを取得" as UC2
+    usecase "天気予報を表示" as UC3
+}
+
+ユーザー -> UC1
+UC1 --> UC2
+UC2 --> UC3
+
+@enduml
