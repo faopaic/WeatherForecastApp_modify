@@ -20,10 +20,10 @@
                     style="display:inline-block;width:22px;height:22px;background:#ff9900;border-radius:4px;margin-right:6px;"></span>30℃以上
             </span>
             <span style="display: flex; align-items: center;"><span
-                    style="display:inline-block;width:22px;height:22px;background:#ffe066;border-radius:4px;margin-right:6px;"></span>25℃以上30℃未満
+                    style="display:inline-block;width:22px;height:22px;background:#ffe066;border-radius:4px;margin-right:6px;"></span>25℃以上
             </span>
             <span style="display: flex; align-items: center;"><span
-                    style="display:inline-block;width:22px;height:22px;background:#99ccff;border-radius:4px;margin-right:6px;"></span>20℃
+                    style="display:inline-block;width:22px;height:22px;background:#99ccff;border-radius:4px;margin-right:6px;"></span>20℃以上
             </span>
             <span style="display: flex; align-items: center;"><span
                     style="display:inline-block;width:22px;height:22px;background:#b3e6b3;border-radius:4px;margin-right:6px;"></span>20℃未満
@@ -151,11 +151,11 @@
 
         // 気温に応じた色を返す関数（未満判定に変更）
         function getTempColor(temp) {
-            if (temp < 20) return '#b3e6b3'; // 20℃未満 緑
-            if (temp < 25) return '#99ccff'; // 25℃未満 青
-            if (temp < 30) return '#ffe066'; // 30℃未満 黄
-            if (temp < 35) return '#ff9900'; // 35℃未満 オレンジ
-            return '#ff3333'; // 35℃以上 赤
+            if (temp >= 35) return '#ff3333'; // 35℃以上 赤
+            if (temp >= 30) return '#ff9900'; // 30℃以上 オレンジ
+            if (temp >= 25) return '#ffe066'; // 25℃以上 黄
+            if (temp >= 20) return '#99ccff'; // 20℃以上 青
+            return '#b3e6b3'; // 20℃未満 緑
         }
 
         // 各都道府県の最高気温を取得して色をつける
