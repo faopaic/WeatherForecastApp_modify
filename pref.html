@@ -9,7 +9,8 @@
     <style>
         .weather-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, auto);
             gap: 24px;
             width: 100%;
             min-height: 600px;
@@ -24,7 +25,7 @@
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
             overflow-y: auto;
             margin-bottom: 0;
-            min-width: 500px;
+            min-width: 320px;
             max-width: 100%;
         }
 
@@ -73,26 +74,24 @@
 
             .weather-grid {
                 grid-template-columns: 1fr;
+                grid-template-rows: none;
                 gap: 18px;
             }
 
             .weather-grid-item {
                 padding: 14px 4vw;
+                min-width: unset;
             }
         }
 
         @media (max-width: 1900px) {
             .weather-grid {
                 grid-template-columns: 1fr;
-                grid-template-rows: repeat(4, auto);
+                grid-template-rows: none;
             }
 
             .weather-grid-item {
                 margin-bottom: 16px;
-            }
-
-            .weather-bottom-extra {
-                margin-top: 16px !important;
             }
         }
 
@@ -109,6 +108,40 @@
 
         .weather-livecam iframe {
             margin-top: 0;
+        }
+
+        .weather-top-left {
+            grid-row: 1;
+            grid-column: 1;
+        }
+
+        .weather-top-center {
+            grid-row: 1;
+            grid-column: 2;
+        }
+
+        .weather-top-right {
+            grid-row: 1;
+            grid-column: 3;
+        }
+
+        .weather-bottom-left {
+            grid-row: 2;
+            grid-column: 1;
+        }
+
+        .weather-bottom-center {
+            grid-row: 2;
+            grid-column: 2;
+        }
+
+        .weather-bottom-right {
+            grid-row: 2;
+            grid-column: 3;
+        }
+
+        .weather-map-btn {
+            min-width: 200px;
         }
     </style>
 </head>
@@ -183,10 +216,10 @@
                 .then(data => {
                     console.log('取得データ', data); // デバッグ用
                     let html = '';
-                    html += `<div class="weather-grid">`;
+                    html += `<div class=\"weather-grid\">`;
 
-                    // --- 天気 ---
-                    html += `<div class="weather-grid-item weather-top-left"><h2>天気</h2>`;
+                    // --- 天気（左上） ---
+                    html += `<div class=\"weather-grid-item weather-top-left\"><h2>天気</h2>`;
                     let weatherSeries = null;
                     for (const s of data[0].timeSeries) {
                         if (s.areas && s.areas.some(a => Array.isArray(a.weathers) && a.weathers.length > 0)) {
@@ -220,8 +253,8 @@
                     }
                     html += `</div>`;
 
-                    // --- 気温 ---
-                    html += `<div class=\"weather-grid-item weather-top-right\"><h2>気温</h2>`;
+                    // --- 気温（中央上部） ---
+                    html += `<div class=\"weather-grid-item weather-top-center\"><h2>気温</h2>`;
                     let tempSeries = null;
                     for (const s of data[0].timeSeries) {
                         if (s.areas && s.areas.some(a => Array.isArray(a.temps) && a.temps.length > 0)) {
@@ -252,14 +285,116 @@
                                 }
                             }
                         });
-                        // 気温ボックスの最下部にjapanmap.htmlへ遷移するボタンを追加
-                        html += `<div style=\"text-align:center;margin-top:12px;\"><button onclick=\"location.href='japanmap.html'\" style=\"padding:8px 20px;font-size:1em;border-radius:6px;background:#007acc;color:#fff;border:none;cursor:pointer;\">都道府県マップへ</button></div>`;
                     } else {
                         html += `<div>気温データなし</div>`;
                     }
                     html += `</div>`;
 
-                    // --- 降水確率 ---
+                    // --- ライブカメラ（右上） ---
+                    html += `<div class=\"weather-grid-item weather-top-right weather-livecam\"><h2>ライブカメラ</h2>`;
+                    if (prefId === 'hokkaido') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/38rSYDm-yTk?si=XQqOOTsMbC2WQZYJ\" title=\"北海道ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">北海道ライブカメラ</div></div>`;
+                    } else if (prefId === 'aomori') {
+                        html += `<div id=\"aomori-livecam\" style=\"text-align:center;\">読み込み中...</div>`;
+                    } else if (prefId === 'iwate') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/M1LNwnS3jeU?si=6Ek9okPCspXiRttR\" title=\"岩手ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">岩手ライブカメラ</div></div>`;
+                    } else if (prefId === 'miyagi') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/nczUqLlEXbE?si=4ruO-5z_t8yxjxw-\" title=\"宮城ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">宮城ライブカメラ</div></div>`;
+                    } else if (prefId === 'akita') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/J7_rWq_Owgc?si=gGmX75gzEN_pEdMp\" title=\"秋田ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">秋田ライブカメラ</div></div>`;
+                    } else if (prefId === 'yamagata') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/7xyUfh0hpe0?si=N3j5FR4-qoyxXx8U\" title=\"山形ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">山形ライブカメラ</div></div>`;
+                    } else if (prefId === 'fukushima') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/yoOGxenxnEU?si=aGQcDr_AztKXpKo_\" title=\"福島ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">福島ライブカメラ</div></div>`;
+                    } else if (prefId === 'ibaraki') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/_kNCRJ2Ray0?si=2_Bj3FrzrEEP1syg\" title=\"茨城ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">茨城ライブカメラ</div></div>`;
+                    } else if (prefId === 'tochigi') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/yujHR3zx0K0?si=Nu4ybKR3bce59uSf\" title=\"栃木ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">栃木ライブカメラ</div></div>`;
+                    } else if (prefId === 'gunma') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/_1PfF1v9GJc?si=x7pxuayUS8ppC4Gs\" title=\"群馬ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">群馬ライブカメラ</div></div>`;
+                    } else if (prefId === 'saitama') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/r4KArqPEaTM?si=8Ngf5am2qJmXYS8A\" title=\"埼玉ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">埼玉ライブカメラ</div></div>`;
+                    } else if (prefId === 'chiba') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/q1Nxn99NwJ4?si=IOZnMFPvUCFJYTEd\" title=\"千葉ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">千葉ライブカメラ</div></div>`;
+                    } else if (prefId === 'tokyo') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/Dbvqk7d3G2s?si=Nzgg63BEanIzMgR2\" title=\"東京ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">東京ライブカメラ</div></div>`;
+                    } else if (prefId === 'kanagawa') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/GDtHtiQs37A?si=O9vywaTZvbGwfGPq\" title=\"神奈川ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">神奈川ライブカメラ</div></div>`;
+                    } else if (prefId === 'niigata') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/mwTyv5WRFtc?si=DR_0MR2pyxl_zh_j\" title=\"新潟ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">新潟ライブカメラ</div></div>`;
+                    } else if (prefId === 'toyama') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/rCXqDE9G53A?si=FOqAuHFiTLG7fzdo\" title=\"富山ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">富山ライブカメラ</div></div>`;
+                    } else if (prefId === 'ishikawa') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/rXwJr5g3rzI?si=8DH2Wjv7fGtDyjyI\" title=\"石川ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">石川ライブカメラ</div></div>`;
+                    } else if (prefId === 'fukui') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/IrXQ8JID0Gs?si=wTc9wYXO-Gn7YQKq\" title=\"福井ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">福井ライブカメラ</div></div>`;
+                    } else if (prefId === 'yamanashi') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/0KMeH_vh0Bk?si=eXN4xjzZt8edYTiu\" title=\"山梨ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">山梨ライブカメラ</div></div>`;
+                    } else if (prefId === 'nagano') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/SOt3wKdf7KM?si=0_yDTllPASPZPNf-\" title=\"長野ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">長野ライブカメラ</div></div>`;
+                    } else if (prefId === 'gifu') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/flf9eK5PREQ?si=1v1bpzR9UHXTT4ri\" title=\"岐阜ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">岐阜ライブカメラ</div></div>`;
+                    } else if (prefId === 'shizuoka') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/8cmSSAXudbI?si=DIOF6hXL-ZShuRc9\" title=\"静岡ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">静岡ライブカメラ</div></div>`;
+                    } else if (prefId === 'aichi') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/khi056RTSlM?si=OrwAdka8wZHLp9JV\" title=\"愛知ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">愛知ライブカメラ</div></div>`;
+                    } else if (prefId === 'mie') {
+                        html += `<div style=\"text-align:center;\"><img id=\"mie-livecam-img\" src=\"https://livecamera.ict.jp/cgi-bin/Get.cgi?a=42202551014209&n=29\" width=\"560\" alt=\"国道163号線（丸之内交差点）ライブカメラ\"><div style=\"font-size:0.9em;margin-top:4px;\">伊賀市 国道163号線（丸之内交差点）ライブカメラ（静止画自動更新）</div></div>`;
+                    } else if (prefId === 'shiga') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/Po_2aQkC07U?si=aCRLcn5BdH1DlViZ\" title=\"滋賀ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">滋賀ライブカメラ</div></div>`;
+                    } else if (prefId === 'kyoto') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/v9rQqa_VTEY?si=1qEkmGuSW9Rynzc4\" title=\"京都ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">京都ライブカメラ</div></div>`;
+                    } else if (prefId === 'osaka') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/mrCtoiKzBxo?si=VIj2_12Z_re9LnA7\" title=\"大阪ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">大阪ライブカメラ</div></div>`;
+                    } else if (prefId === 'hyogo') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/8tDuhb9QnQ4?si=YK7bgFJsbIPc6W0N\" title=\"兵庫ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">兵庫ライブカメラ</div></div>`;
+                    } else if (prefId === 'nara') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/VDPBmrAEWMw?si=7d_xMprTAinZ31_k\" title=\"奈良ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">奈良ライブカメラ</div></div>`;
+                    } else if (prefId === 'wakayama') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/DyBIT8goWDo?si=RHFo8xxF0WOGSjcn\" title=\"和歌山ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">和歌山ライブカメラ</div></div>`;
+                    } else if (prefId === 'tottori') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/TMMhsnjVNG0?si=lDRLRZA_ykhclgJk\" title=\"鳥取ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">鳥取ライブカメラ</div></div>`;
+                    } else if (prefId === 'shimane') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/gCSr3Qm3BDM?si=Qy9aKdqYMhpJOF0G\" title=\"島根ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">島根ライブカメラ</div></div>`;
+                    } else if (prefId === 'okayama') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/kpEd-FgkhKA?si=outG7Rj-UwnTGiza\" title=\"岡山ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">岡山ライブカメラ</div></div>`;
+                    } else if (prefId === 'hiroshima') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/bVFs9L6GLV0?si=J6pqqP6ukvHsqXhU\" title=\"広島ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">広島ライブカメラ</div></div>`;
+                    } else if (prefId === 'yamaguchi') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/bU8gyGy8uCY?si=f5AkPXFBhT7KzUNN\" title=\"山口ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">山口ライブカメラ</div></div>`;
+                    } else if (prefId === 'tokushima') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/Dbvqk7d3G2s?si=Nzgg63BEanIzMgR2\" title=\"徳島ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">徳島ライブカメラ</div></div>`;
+                    } else if (prefId === 'kagawa') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/PTy6ofjU_q8?si=gD_IyIqkxH4HuUSV\" title=\"香川ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">香川ライブカメラ</div></div>`;
+                    } else if (prefId === 'ehime') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/aJcTvBuj5AA?si=XGXktp5vmPAzfJLH\" title=\"愛媛ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">愛媛ライブカメラ</div></div>`;
+                    } else if (prefId === 'kochi') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/bLbpMFbYw0Q?si=H8b-uZ5QN4DEPR8h\" title=\"高知ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">高知ライブカメラ</div></div>`;
+                    } else if (prefId === 'fukuoka') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/3D1NIpeZyBg?si=0-zCT72NPweBIXMZ\" title=\"福岡ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">福岡ライブカメラ</div></div>`;
+                    } else if (prefId === 'saga') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/OOn0sJuEbSA?si=gBabr5ug9SA64lHE\" title=\"佐賀ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">佐賀ライブカメラ</div></div>`;
+                    } else if (prefId === 'nagasaki') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/ZoETGE0w5w8?si=UBsgHFko6yk0BIrD\" title=\"長崎ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">長崎ライブカメラ</div></div>`;
+                    } else if (prefId === 'kumamoto') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/Mfq_QtuyrYI?si=tq-ToXoeyriy-cQ9\" title=\"熊本ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">熊本ライブカメラ</div></div>`;
+                    } else if (prefId === 'oita') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/b2AU2EL4BW0?si=QCBC6a2zFnCBgFGL\" title=\"大分ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">大分ライブカメラ</div></div>`;
+                    } else if (prefId === 'miyazaki') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/T3uOuFisD4A?si=aYnXXmraraJpdZKD\" title=\"宮崎ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">宮崎ライブカメラ</div></div>`;
+                    } else if (prefId === 'kagoshima') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/Fw9K-zkkNhs?si=qJ1YRJ_CiAm1p95i\" title=\"鹿児島ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">鹿児島ライブカメラ</div></div>`;
+                    } else if (prefId === 'okinawa') {
+                        html += `<div style=\"text-align:center;\"><iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/6HYjCFkmDPA?si=owHEaH1n4v1rybdj\" title=\"沖縄ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">沖縄ライブカメラ</div></div>`;
+                    } else {
+                        html += `<div style=\"text-align:center;\">対応するライブカメラがありません</div>`;
+                    }
+                    html += `</div>`; // weather-livecam
+
+                    // グリッドの一番最後（ライブカメラboxの直後、4列目の空きスペース）に都道府県マップボタンを追加
+                    // html += `<div class=\"weather-grid-item weather-map-btn\" style=\"display:flex;align-items:center;justify-content:center;min-width:200px;\"><button onclick=\"location.href='japanmap.html'\" style=\"padding:18px 32px;font-size:1.2em;border-radius:10px;background:#007acc;color:#fff;border:none;cursor:pointer;box-shadow:0 2px 8px #007acc44;font-weight:bold;letter-spacing:0.1em;\">都道府県マップへ</button></div>`;
+
+                    // --- 降水確率（左下） ---
                     html += `<div class=\"weather-grid-item weather-bottom-left\"><h2>降水確率</h2>`;
                     let popSeries = null;
                     for (const s of data[0].timeSeries) {
@@ -294,8 +429,8 @@
                     }
                     html += `</div>`;
 
-                    // --- 波・風 ---
-                    html += `<div class=\"weather-grid-item weather-bottom-right\"><h2>波・風</h2>`;
+                    // --- 波・風（中央下部） ---
+                    html += `<div class=\"weather-grid-item weather-bottom-center\"><h2>波・風</h2>`;
                     let waveSeries = null,
                         windSeries = null;
                     for (const s of data[0].timeSeries) {
@@ -344,112 +479,15 @@
                     } else {
                         html += `<div>波・風データなし</div>`;
                     }
-                    html += `</div>`; // weather-bottom-right
+                    html += `</div>`; // weather-bottom-center
 
-                    // --- ライブカメラ ---
-                    html += `<div class=\"weather-grid-item weather-livecam\"><h2>ライブカメラ</h2>`;
-                    if (prefId === 'aomori') {
-                        html += `<div id=\"aomori-livecam\" style=\"text-align:center;\">読み込み中...</div>`;
-                    } else if (prefId === 'hokkaido') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/38rSYDm-yTk?si=XQqOOTsMbC2WQZYJ\" title=\"北海道ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">北海道ライブカメラ</div></div>`;
-                    } else if (prefId === 'iwate') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/M1LNwnS3jeU?si=6Ek9okPCspXiRttR\" title=\"岩手ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">岩手ライブカメラ</div></div>`;
-                    } else if (prefId === 'gunma') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/_1PfF1v9GJc?si=x7pxuayUS8ppC4Gs\" title=\"群馬ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">群馬ライブカメラ</div></div>`;
-                    } else if (prefId === 'miyagi') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/nczUqLlEXbE?si=4ruO-5z_t8yxjxw-\" title=\"宮城ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">宮城ライブカメラ</div></div>`;
-                    } else if (prefId === 'akita') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/J7_rWq_Owgc?si=gGmX75gzEN_pEdMp\" title=\"秋田ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">秋田ライブカメラ</div></div>`;
-                    } else if (prefId === 'yamagata') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/7xyUfh0hpe0?si=N3j5FR4-qoyxXx8U\" title=\"山形ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">山形ライブカメラ</div></div>`;
-                    } else if (prefId === 'fukushima') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/yoOGxenxnEU?si=aGQcDr_AztKXpKo_\" title=\"福島ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">福島ライブカメラ</div></div>`;
-                    } else if (prefId === 'ibaraki') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/_kNCRJ2Ray0?si=2_Bj3FrzrEEP1syg\" title=\"茨城ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">茨城ライブカメラ</div></div>`;
-                    } else if (prefId === 'tochigi') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/yujHR3zx0K0?si=Nu4ybKR3bce59uSf\" title=\"栃木ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">栃木ライブカメラ</div></div>`;
-                    } else if (prefId === 'saitama') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/r4KArqPEaTM?si=8Ngf5am2qJmXYS8A\" title=\"埼玉ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">埼玉ライブカメラ</div></div>`;
-                    } else if (prefId === 'niigata') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/mwTyv5WRFtc?si=DR_0MR2pyxl_zh_j\" title=\"新潟ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">新潟ライブカメラ</div></div>`;
-                    } else if (prefId === 'chiba') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/q1Nxn99NwJ4?si=IOZnMFPvUCFJYTEd\" title=\"千葉ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">千葉ライブカメラ</div></div>`;
-                    } else if (prefId === 'kanagawa') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/GDtHtiQs37A?si=O9vywaTZvbGwfGPq\" title=\"神奈川ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">神奈川ライブカメラ</div></div>`;
-                    } else if (prefId === 'tokyo') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/Dbvqk7d3G2s?si=Nzgg63BEanIzMgR2\" title=\"東京ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">東京ライブカメラ</div></div>`;
-                    } else if (prefId === 'toyama') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/rCXqDE9G53A?si=FOqAuHFiTLG7fzdo\" title=\"富山ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">富山ライブカメラ</div></div>`;
-                    } else if (prefId === 'ishikawa') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/rXwJr5g3rzI?si=8DH2Wjv7fGtDyjyI\" title=\"石川ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">石川ライブカメラ</div></div>`;
-                    } else if (prefId === 'fukui') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/IrXQ8JID0Gs?si=wTc9wYXO-Gn7YQKq\" title=\"福井ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">福井ライブカメラ</div></div>`;
-                    } else if (prefId === 'yamanashi') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/0KMeH_vh0Bk?si=eXN4xjzZt8edYTiu\" title=\"山梨ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">山梨ライブカメラ</div></div>`;
-                    } else if (prefId === 'nagano') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/SOt3wKdf7KM?si=0_yDTllPASPZPNf-\" title=\"長野ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">長野ライブカメラ</div></div>`;
-                    } else if (prefId === 'gifu') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/flf9eK5PREQ?si=1v1bpzR9UHXTT4ri\" title=\"岐阜ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">岐阜ライブカメラ</div></div>`;
-                    } else if (prefId === 'shizuoka') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/8cmSSAXudbI?si=DIOF6hXL-ZShuRc9\" title=\"静岡ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">静岡ライブカメラ</div></div>`;
-                    } else if (prefId === 'aichi') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/khi056RTSlM?si=OrwAdka8wZHLp9JV\" title=\"愛知ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">愛知ライブカメラ</div></div>`;
-                    } else if (prefId === 'mie') {
-                        html += `<div style=\"text-align:center;\"><img id=\"mie-livecam-img\" src=\"https://livecamera.ict.jp/cgi-bin/Get.cgi?a=42202551014209&n=29\" width=\"560\" alt=\"国道163号線（丸之内交差点）ライブカメラ\"><div style=\"font-size:0.9em;margin-top:4px;\">伊賀市 国道163号線（丸之内交差点）ライブカメラ（静止画自動更新）</div></div>`;
-                    } else if (prefId === 'shiga') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/Po_2aQkC07U?si=aCRLcn5BdH1DlViZ\" title=\"滋賀ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">滋賀ライブカメラ</div></div>`;
-                    } else if (prefId === 'kyoto') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/v9rQqa_VTEY?si=1qEkmGuSW9Rynzc4\" title=\"京都ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">京都ライブカメラ</div></div>`;
-                    } else if (prefId === 'osaka') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/mrCtoiKzBxo?si=VIj2_12Z_re9LnA7\" title=\"大阪ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">大阪ライブカメラ</div></div>`;
-                    } else if (prefId === 'hyogo') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/8tDuhb9QnQ4?si=YK7bgFJsbIPc6W0N\" title=\"兵庫ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">兵庫ライブカメラ</div></div>`;
-                    } else if (prefId === 'nara') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/VDPBmrAEWMw?si=7d_xMprTAinZ31_k\" title=\"奈良ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">奈良ライブカメラ</div></div>`;
-                    } else if (prefId === 'wakayama') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/DyBIT8goWDo?si=RHFo8xxF0WOGSjcn\" title=\"和歌山ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">和歌山ライブカメラ</div></div>`;
-                    } else if (prefId === 'tottori') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/TMMhsnjVNG0?si=lDRLRZA_ykhclgJk\" title=\"鳥取ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">鳥取ライブカメラ</div></div>`;
-                    } else if (prefId === 'shimane') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/gCSr3Qm3BDM?si=Qy9aKdqYMhpJOF0G\" title=\"島根ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">島根ライブカメラ</div></div>`;
-                    } else if (prefId === 'okayama') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/kpEd-FgkhKA?si=outG7Rj-UwnTGiza\" title=\"岡山ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">岡山ライブカメラ</div></div>`;
-                    } else if (prefId === 'hiroshima') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/bVFs9L6GLV0?si=J6pqqP6ukvHsqXhU\" title=\"広島ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">広島ライブカメラ</div></div>`;
-                    } else if (prefId === 'yamaguchi') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/bU8gyGy8uCY?si=f5AkPXFBhT7KzUNN\" title=\"山口ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">山口ライブカメラ</div></div>`;
-                    } else if (prefId === 'tokushima') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/Dbvqk7d3G2s?si=Nzgg63BEanIzMgR2\" title=\"徳島ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">徳島ライブカメラ</div></div>`;
-                    } else if (prefId === 'kagawa') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/PTy6ofjU_q8?si=gD_IyIqkxH4HuUSV\" title=\"香川ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">香川ライブカメラ</div></div>`;
-                    } else if (prefId === 'ehime') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/aJcTvBuj5AA?si=XGXktp5vmPAzfJLH\" title=\"愛媛ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">愛媛ライブカメラ</div></div>`;
-                    } else if (prefId === 'kochi') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/Dbvqk7d3G2s?si=Nzgg63BEanIzMgR2\" title=\"高知ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">高知ライブカメラ</div></div>`;
-                    } else if (prefId === 'fukuoka') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/3D1NIpeZyBg?si=0-zCT72NPweBIXMZ\" title=\"福岡ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">福岡ライブカメラ</div></div>`;
-                    } else if (prefId === 'saga') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/3D1NIpeZyBg?si=0-zCT72NPweBIXMZ\" title=\"佐賀ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">佐賀ライブカメラ</div></div>`;
-                    } else if (prefId === 'nagasaki') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/ZoETGE0w5w8?si=UBsgHFko6yk0BIrD\" title=\"長崎ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">長崎ライブカメラ</div></div>`;
-                    } else if (prefId === 'kumamoto') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/Mfq_QtuyrYI?si=tq-ToXoeyriy-cQ9\" title=\"熊本ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">熊本ライブカメラ</div></div>`;
-                    } else if (prefId === 'oita') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/b2AU2EL4BW0?si=QCBC6a2zFnCBgFGL\" title=\"大分ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">大分ライブカメラ</div></div>`;
-                    } else if (prefId === 'miyazaki') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/T3uOuFisD4A?si=aYnXXmraraJpdZKD\" title=\"宮崎ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">宮崎ライブカメラ</div></div>`;
-                    } else if (prefId === 'kagoshima') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/Fw9K-zkkNhs?si=qJ1YRJ_CiAm1p95i\" title=\"鹿児島ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">鹿児島ライブカメラ</div></div>`;
-                    } else if (prefId === 'okinawa') {
-                        html += `<div style=\"text-align:center;\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/6HYjCFkmDPA?si=owHEaH1n4v1rybdj\" title=\"沖縄ライブカメラ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">沖縄ライブカメラ</div></div>`;
-                    } else {
-                        html += `<div style=\"text-align:center;\">対応するライブカメラがありません</div>`;
-                    }
-                    html += `</div>`; // weather-livecam
+                    // --- 都道府県マップ（右下） ---
+                    html += `<div class=\"weather-grid-item weather-bottom-right weather-map-btn\" style=\"display:flex;align-items:center;justify-content:center;min-width:200px;\"><button onclick=\"location.href='japanmap.html'\" style=\"padding:18px 32px;font-size:1.2em;border-radius:10px;background:#007acc;color:#fff;border:none;cursor:pointer;box-shadow:0 2px 8px #007acc44;font-weight:bold;letter-spacing:0.1em;\">都道府県ヒートマップへ</button></div>`;
 
                     // --- 注意報・警報 ---
                     // ここは何も出力しない（fetchで必要な場合のみ追加）
                     html += `</div>`; // weather-grid
+                    // グリッドの直後に都道府県マップボタンを追加
                     // 概況や詳細情報
                     if (data[0].text) {
                         for (const key in data[0].text) {
@@ -512,7 +550,7 @@
                     const liveDiv = document.getElementById('aomori-livecam');
                     if (data.items && data.items.length > 0) {
                         const videoId = data.items[0].id.videoId;
-                        liveDiv.innerHTML = `<iframe width=\"420\" height=\"236\" src=\"https://www.youtube.com/embed/${videoId}?autoplay=1\" title=\"青森ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">青森ライブカメラ（ライブ配信中）</div>`;
+                        liveDiv.innerHTML = `<iframe width=\"480\" height=\"270\" src=\"https://www.youtube.com/embed/${videoId}?autoplay=1\" title=\"青森ライブカメラ\" frameborder=\"0\" allowfullscreen></iframe><div style=\"font-size:0.9em;margin-top:4px;\">青森ライブカメラ（ライブ配信中）</div>`;
                     } else {
                         liveDiv.innerHTML = `<div style=\"color:#888;\">現在ライブ配信中の動画がありません</div>`;
                     }
@@ -534,6 +572,9 @@
             updateImg();
             setInterval(updateImg, 3000); // 3秒ごとに更新
         }
+
+        // すべてのライブカメラiframeのwidthとheightをwidth="480" height="270"に統一
+        html = html.replace(/<iframe width=\\?"\d+\\?" height=\\?"\d+\\?"/g, '<iframe width="480" height="270"');
     </script>
 </body>
 
