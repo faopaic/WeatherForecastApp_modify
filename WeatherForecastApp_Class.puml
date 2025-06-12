@@ -1,0 +1,38 @@
+@startuml WeatherForecastApp_Class
+
+title 天気予報クラス図
+
+class WeatherForecast {
+    - String dateTime
+    - String weather
+    - String maxTemp
+    - String minTemp
+    - String pop
+    - String windDirection
+    - String waveHeight
+    + WeatherForecast(String dateTime, String weather, String maxTemp, String minTemp, String pop, String windDirection, String waveHeight)
+    + WeatherForecast(String dateTime, String weather, String maxTemp, String minTemp, String pop)
+    + String getDateTime()
+    + String getWeather()
+    + String getMaxTemp()
+    + String getMinTemp()
+    + String getPop()
+    + String getWindDirection()
+    + String getWaveHeight().
+}
+
+class WeatherApiClient {
+    - String targetUrl
+    + WeatherApiClient(String targetUrl)
+    + List<WeatherForecast> fetchWeatherForecasts(String region)
+}
+
+class WeatherForecastApp {
+    - static Map<String, String> PREF_CODE_MAP
+    + static void main(String[] args)
+}
+
+WeatherForecastApp --> WeatherApiClient
+WeatherApiClient --> WeatherForecast
+
+@enduml
