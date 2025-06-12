@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>都道府県タイピングゲーム</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Meiryo', sans-serif;
+            background: #f0f8ff;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px #007acc22;
+            padding: 32px 24px;
+        }
+
+        .question {
+            font-size: 2em;
+            margin: 32px 0 24px 0;
+            letter-spacing: 0.2em;
+            color: #007acc;
+        }
+
+        input[type="text"] {
+            font-size: 1.3em;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            width: 80%;
+            margin-bottom: 16px;
+        }
+
+        .score {
+            font-size: 1.1em;
+            margin: 16px 0;
+        }
+
+        .timer {
+            font-size: 1.1em;
+            margin: 16px 0;
+            color: #e67e22;
+        }
+
+        .result {
+            font-size: 1.2em;
+            margin: 24px 0;
+            color: #e67e22;
+        }
+
+        button {
+            padding: 10px 28px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            background: #007acc;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-top: 18px;
+        }
+
+        button:active {
+            background: #005b99;
+        }
+
+        .main-flex {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .game-box {
+            width: 420px;
+            min-width: 300px;
+            max-width: 100vw;
+        }
+
+        .map-box {
+            min-width: 320px;
+            max-width: 480px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .main-flex {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .map-box {
+                margin-top: 32px;
+            }
+        }
+
+        /* 日本地図のhover効果を無効化 */
+        #jp_map li:hover a,
+        #jp_map a:hover {
+            border: none !important;
+            box-shadow: none !important;
+            background: inherit !important;
+            opacity: 1 !important;
+            filter: none !important;
+        }
+
+        #jp_map li.typing-highlight,
+        #jp_map li.typing-highlight a {
+            background: #b266ff !important;
+            color: inherit !important;
+            border-color: #b266ff !important;
+            z-index: 10;
+        }
+
+        #jp_map li.typing-highlight a span {
+            color: inherit !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-flex">
+        <div class="game-box">
+            <div class="container">
+                <h1>都道府県タイピングゲーム</h1>
+                <div class="score" id="score">スコア: 0 / 0</div>
+                <div class="timer" id="timer">タイマー: 0.0 秒</div>
+                <div class="question" id="question">---</div>
+                <input type="text" id="answer" autocomplete="off" placeholder="ここに入力..." disabled>
+                <div class="result" id="result"></div>
+                <button id="start">スタート</button>
+                <button id="restart" style="display:none;">もう一度</button>
+                <button id="reset" style="margin-left:10px;">リセット</button>
+            </div>
+        </div>
+        <div class="map-box">
+            <div id="selected-pref" style="margin-bottom:12px;">都道府県を選択してください</div>
+            <div id="jp_map">
+                <ul class="hokkaido" aria-label="北海道">
+                    <li class="hokkaido"><a href="#pref_hokkaido"><span class="pref_name">北海道</span></a></li>
+                </ul>
+                <ul class="tohoku" aria-label="東北">
+                    <li class="aomori"><a href="#pref_aomori"><span class="pref_name">青森</span></a></li>
+                    <li class="akita"><a href="#pref_akita"><span class="pref_name">秋田</span></a></li>
+                    <li class="iwate"><a href="#pref_iwate"><span class="pref_name">岩手</span></a></li>
+                    <li class="yamagata"><a href="#pref_yamagata"><span class="pref_name">山形</span></a></li>
+                    <li class="miyagi"><a href="#pref_miyagi"><span class="pref_name">宮城</span></a></li>
+                    <li class="fukushima"><a href="#pref_fukushima"><span class="pref_name">福島</span></a></li>
+                </ul>
+                <ul class="kanto" aria-label="関東">
+                    <li class="gunma"><a href="#pref_gunma"><span class="pref_name">群馬</span></a></li>
+                    <li class="tochigi"><a href="#pref_tochigi"><span class="pref_name">栃木</span></a></li>
+                    <li class="ibaraki"><a href="#pref_ibaraki"><span class="pref_name">茨城</span></a></li>
+                    <li class="saitama"><a href="#pref_saitama"><span class="pref_name">埼玉</span></a></li>
+                    <li class="chiba"><a href="#pref_chiba"><span class="pref_name">千葉</span></a></li>
+                    <li class="tokyo"><a href="#pref_tokyo"><span class="pref_name">東京</span></a></li>
+                    <li class="kanagawa"><a href="#pref_kanagawa"><span class="pref_name">神奈川</span></a></li>
+                </ul>
+                <ul class="chubu" aria-label="中部">
+                    <li class="niigata"><a href="#pref_niigata"><span class="pref_name">新潟</span></a></li>
+                    <li class="toyama"><a href="#pref_toyama"><span class="pref_name">富山</span></a></li>
+                    <li class="ishikawa"><a href="#pref_ishikawa"><span class="pref_name">石川</span></a></li>
+                    <li class="fukui"><a href="#pref_fukui"><span class="pref_name">福井</span></a></li>
+                    <li class="nagano"><a href="#pref_nagano"><span class="pref_name">長野</span></a></li>
+                    <li class="gifu"><a href="#pref_gifu"><span class="pref_name">岐阜</span></a></li>
+                    <li class="yamanashi"><a href="#pref_yamanashi"><span class="pref_name">山梨</span></a></li>
+                    <li class="aichi"><a href="#pref_aichi"><span class="pref_name">愛知</span></a></li>
+                    <li class="shizuoka"><a href="#pref_shizuoka"><span class="pref_name">静岡</span></a></li>
+                </ul>
+                <ul class="kansai" aria-label="近畿">
+                    <li class="kyoto"><a href="#pref_kyoto"><span class="pref_name">京都</span></a></li>
+                    <li class="shiga"><a href="#pref_shiga"><span class="pref_name">滋賀</span></a></li>
+                    <li class="osaka"><a href="#pref_osaka"><span class="pref_name">大阪</span></a></li>
+                    <li class="nara"><a href="#pref_nara"><span class="pref_name">奈良</span></a></li>
+                    <li class="mie"><a href="#pref_mie"><span class="pref_name">三重</span></a></li>
+                    <li class="wakayama"><a href="#pref_wakayama"><span class="pref_name">和歌山</span></a></li>
+                    <li class="hyogo"><a href="#pref_hyougo"><span class="pref_name">兵庫</span></a></li>
+                </ul>
+                <ul class="chugoku" aria-label="中国">
+                    <li class="tottori"><a href="#pref_tottori"><span class="pref_name">鳥取</span></a></li>
+                    <li class="okayama"><a href="#pref_okayama"><span class="pref_name">岡山</span></a></li>
+                    <li class="shimane"><a href="#pref_shimane"><span class="pref_name">島根</span></a></li>
+                    <li class="hiroshima"><a href="#pref_hiroshima"><span class="pref_name">広島</span></a></li>
+                    <li class="yamaguchi"><a href="#pref_yamaguchi"><span class="pref_name">山口</span></a></li>
+                </ul>
+                <ul class="shikoku" aria-label="四国">
+                    <li class="kagawa"><a href="#pref_kagawa"><span class="pref_name">香川</span></a></li>
+                    <li class="ehime"><a href="#pref_ehime"><span class="pref_name">愛媛</span></a></li>
+                    <li class="tokushima"><a href="#pref_tokushima"><span class="pref_name">徳島</span></a></li>
+                    <li class="kochi"><a href="#pref_kouchi"><span class="pref_name">高知</span></a></li>
+                </ul>
+                <ul class="kyushu" aria-label="九州">
+                    <li class="fukuoka"><a href="#pref_fukuoka"><span class="pref_name">福岡</span></a></li>
+                    <li class="saga"><a href="#pref_saga"><span class="pref_name">佐賀</span></a></li>
+                    <li class="nagasaki"><a href="#pref_nagasaki"><span class="pref_name">長崎</span></a></li>
+                    <li class="oita"><a href="#pref_oita"><span class="pref_name">大分</span></a></li>
+                    <li class="kumamoto"><a href="#pref_kumamoto"><span class="pref_name">熊本</span></a></li>
+                    <li class="miyazaki"><a href="#pref_miyazaki"><span class="pref_name">宮崎</span></a></li>
+                    <li class="kagoshima"><a href="#pref_kagoshima"><span class="pref_name">鹿児島</span></a></li>
+                </ul>
+                <ul class="okinawa" aria-label="沖縄">
+                    <li class="okinawa"><a href="#pref_okinawa"><span class="pref_name">沖縄</span></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        const prefs = [
+            '北海道', '青森', '岩手', '宮城', '秋田', '山形', '福島', '茨城', '栃木', '群馬', '埼玉', '千葉', '東京', '神奈川',
+            '新潟', '富山', '石川', '福井', '山梨', '長野', '岐阜', '静岡', '愛知', '三重', '滋賀', '京都', '大阪', '兵庫', '奈良', '和歌山',
+            '鳥取', '島根', '岡山', '広島', '山口', '徳島', '香川', '愛媛', '高知', '福岡', '佐賀', '長崎', '熊本', '大分', '宮崎', '鹿児島', '沖縄'
+        ];
+        let quiz = [];
+        let current = 0;
+        let score = 0;
+        let timer = 0;
+        let timerInterval = null;
+        let started = false;
+        const question = document.getElementById('question');
+        const answer = document.getElementById('answer');
+        const result = document.getElementById('result');
+        const scoreDiv = document.getElementById('score');
+        const restartBtn = document.getElementById('restart');
+        const startBtn = document.getElementById('start');
+        const timerDiv = document.getElementById('timer');
+        const resetBtn = document.getElementById('reset');
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        function startGame() {
+            quiz = prefs.slice();
+            shuffle(quiz);
+            current = 0;
+            score = 0;
+            scoreDiv.textContent = `スコア: 0 / ${quiz.length}`;
+            result.textContent = '';
+            restartBtn.style.display = 'none';
+            startBtn.style.display = 'none';
+            resetBtn.style.display = 'inline-block'; // スタート時にリセットボタンを表示
+            answer.value = '';
+            answer.disabled = false;
+            started = true;
+            timer = 0;
+            timerDiv.textContent = 'タイマー: 0.0 秒';
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timer += 0.1;
+                timerDiv.textContent = `タイマー: ${timer.toFixed(1)} 秒`;
+            }, 100);
+            showQuestion();
+        }
+
+        function endGame() {
+            started = false;
+            answer.disabled = true;
+            restartBtn.style.display = 'inline-block';
+            startBtn.style.display = 'none';
+            resetBtn.style.display = 'none'; // 終了時はリセットボタンを非表示
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        function highlightMapPref(prefName) {
+            // すべての都道府県の紫色クラスをリセット
+            document.querySelectorAll('#jp_map li').forEach(li => {
+                li.classList.remove('typing-highlight');
+            });
+            // prefNameに対応するliにクラスを付与
+            const classMap = {
+                '北海道': 'hokkaido', '青森': 'aomori', '岩手': 'iwate', '宮城': 'miyagi', '秋田': 'akita', '山形': 'yamagata', '福島': 'fukushima',
+                '茨城': 'ibaraki', '栃木': 'tochigi', '群馬': 'gunma', '埼玉': 'saitama', '千葉': 'chiba', '東京': 'tokyo', '神奈川': 'kanagawa',
+                '新潟': 'niigata', '富山': 'toyama', '石川': 'ishikawa', '福井': 'fukui', '山梨': 'yamanashi', '長野': 'nagano', '岐阜': 'gifu',
+                '静岡': 'shizuoka', '愛知': 'aichi', '三重': 'mie', '滋賀': 'shiga', '京都': 'kyoto', '大阪': 'osaka', '兵庫': 'hyogo', '奈良': 'nara', '和歌山': 'wakayama',
+                '鳥取': 'tottori', '島根': 'shimane', '岡山': 'okayama', '広島': 'hiroshima', '山口': 'yamaguchi',
+                '徳島': 'tokushima', '香川': 'kagawa', '愛媛': 'ehime', '高知': 'kochi',
+                '福岡': 'fukuoka', '佐賀': 'saga', '長崎': 'nagasaki', '熊本': 'kumamoto', '大分': 'oita', '宮崎': 'miyazaki', '鹿児島': 'kagoshima', '沖縄': 'okinawa'
+            };
+            const className = classMap[prefName];
+            if (className) {
+                const li = document.querySelector(`#jp_map li.${className}`);
+                if (li) li.classList.add('typing-highlight');
+            }
+        }
+
+        function showQuestion() {
+            if (current < quiz.length) {
+                question.textContent = quiz[current];
+                answer.value = '';
+                answer.focus();
+                highlightMapPref(quiz[current]); // 追加
+            } else {
+                question.textContent = '終了！';
+                result.textContent = `全問クリア！スコア: ${score} / ${quiz.length}　タイム: ${timer.toFixed(1)} 秒`;
+                highlightMapPref(null); // 終了時リセット
+                endGame();
+            }
+        }
+
+        // ローマ字変換用マップ（簡易版・主要な都道府県のみ/必要に応じて拡張）
+        const romajiMap = {
+            '北海道': ['hokkaido'],
+            '青森': ['aomori'],
+            '岩手': ['iwate'],
+            '宮城': ['miyagi'],
+            '秋田': ['akita'],
+            '山形': ['yamagata'],
+            '福島': ['fukushima'],
+            '茨城': ['ibaraki'],
+            '栃木': ['tochigi'],
+            '群馬': ['gunma'],
+            '埼玉': ['saitama'],
+            '千葉': ['chiba'],
+            '東京': ['tokyo'],
+            '神奈川': ['kanagawa'],
+            '新潟': ['niigata'],
+            '富山': ['toyama'],
+            '石川': ['ishikawa'],
+            '福井': ['fukui'],
+            '山梨': ['yamanashi'],
+            '長野': ['nagano'],
+            '岐阜': ['gifu'],
+            '静岡': ['shizuoka'],
+            '愛知': ['aichi'],
+            '三重': ['mie'],
+            '滋賀': ['shiga'],
+            '京都': ['kyoto'],
+            '大阪': ['osaka'],
+            '兵庫': ['hyogo'],
+            '奈良': ['nara'],
+            '和歌山': ['wakayama'],
+            '鳥取': ['tottori'],
+            '島根': ['shimane'],
+            '岡山': ['okayama'],
+            '広島': ['hiroshima'],
+            '山口': ['yamaguchi'],
+            '徳島': ['tokushima'],
+            '香川': ['kagawa'],
+            '愛媛': ['ehime'],
+            '高知': ['kochi'],
+            '福岡': ['fukuoka'],
+            '佐賀': ['saga'],
+            '長崎': ['nagasaki'],
+            '熊本': ['kumamoto'],
+            '大分': ['oita'],
+            '宮崎': ['miyazaki'],
+            '鹿児島': ['kagoshima'],
+            '沖縄': ['okinawa']
+        };
+
+        answer.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !answer.disabled && started) {
+                const userInput = answer.value.trim();
+                const correct = quiz[current];
+                const romajiList = romajiMap[correct] || [];
+                if (
+                    userInput === correct ||
+                    romajiList.some(r => userInput.toLowerCase() === r)
+                ) {
+                    score++;
+                    result.textContent = '正解！';
+                } else {
+                    result.textContent = `不正解... 正: ${quiz[current]}`;
+                }
+                current++;
+                scoreDiv.textContent = `スコア: ${score} / ${quiz.length}`;
+                setTimeout(() => {
+                    result.textContent = '';
+                    showQuestion();
+                }, 800);
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            startBtn.style.display = 'inline-block';
+            restartBtn.style.display = 'none';
+            resetBtn.style.display = 'none'; // 再スタート時もリセットボタンを非表示
+            answer.value = '';
+            answer.disabled = true;
+            question.textContent = '---';
+            timerDiv.textContent = 'タイマー: 0.0 秒';
+            scoreDiv.textContent = `スコア: 0 / ${prefs.length}`;
+            result.textContent = '';
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if (timerInterval) clearInterval(timerInterval);
+            started = false;
+            quiz = [];
+            current = 0;
+            score = 0;
+            timer = 0;
+            answer.value = '';
+            answer.disabled = true;
+            question.textContent = '---';
+            timerDiv.textContent = 'タイマー: 0.0 秒';
+            scoreDiv.textContent = `スコア: 0 / ${prefs.length}`;
+            result.textContent = '';
+            startBtn.style.display = 'inline-block';
+            restartBtn.style.display = 'none';
+            resetBtn.style.display = 'none'; // リセット後はリセットボタンを非表示
+        });
+
+        startBtn.addEventListener('click', startGame);
+        window.onload = () => {
+            // 初期状態で入力不可・スコア/タイマー/問題リセット
+            answer.value = '';
+            answer.disabled = true;
+            question.textContent = '---';
+            timerDiv.textContent = 'タイマー: 0.0 秒';
+            scoreDiv.textContent = `スコア: 0 / ${prefs.length}`;
+            result.textContent = '';
+            startBtn.style.display = 'inline-block';
+            restartBtn.style.display = 'none';
+            resetBtn.style.display = 'none'; // 初期状態でリセットボタン非表示
+        };
+
+        // 日本地図クリック時の遷移（index.htmlと同じ）
+        const prefCodeMap = {
+            hokkaido: { code: '016000', name: '北海道' },
+            aomori: { code: '020000', name: '青森県' },
+            iwate: { code: '030000', name: '岩手県' },
+            miyagi: { code: '040000', name: '宮城県' },
+            akita: { code: '050000', name: '秋田県' },
+            yamagata: { code: '060000', name: '山形県' },
+            fukushima: { code: '070000', name: '福島県' },
+            ibaraki: { code: '080000', name: '茨城県' },
+            tochigi: { code: '090000', name: '栃木県' },
+            gunma: { code: '100000', name: '群馬県' },
+            saitama: { code: '110000', name: '埼玉県' },
+            chiba: { code: '120000', name: '千葉県' },
+            tokyo: { code: '130000', name: '東京都' },
+            kanagawa: { code: '140000', name: '神奈川県' },
+            niigata: { code: '150000', name: '新潟県' },
+            toyama: { code: '160000', name: '富山県' },
+            ishikawa: { code: '170000', name: '石川県' },
+            fukui: { code: '180000', name: '福井県' },
+            yamanashi: { code: '190000', name: '山梨県' },
+            nagano: { code: '200000', name: '長野県' },
+            gifu: { code: '210000', name: '岐阜県' },
+            shizuoka: { code: '220000', name: '静岡県' },
+            aichi: { code: '230000', name: '愛知県' },
+            mie: { code: '240000', name: '三重県' },
+            shiga: { code: '250000', name: '滋賀県' },
+            kyoto: { code: '260000', name: '京都府' },
+            osaka: { code: '270000', name: '大阪府' },
+            hyogo: { code: '280000', name: '兵庫県' },
+            nara: { code: '290000', name: '奈良県' },
+            wakayama: { code: '300000', name: '和歌山県' },
+            tottori: { code: '310000', name: '鳥取県' },
+            shimane: { code: '320000', name: '島根県' },
+            okayama: { code: '330000', name: '岡山県' },
+            hiroshima: { code: '340000', name: '広島県' },
+            yamaguchi: { code: '350000', name: '山口県' },
+            tokushima: { code: '360000', name: '徳島県' },
+            kagawa: { code: '370000', name: '香川県' },
+            ehime: { code: '380000', name: '愛媛県' },
+            kochi: { code: '390000', name: '高知県' },
+            fukuoka: { code: '400000', name: '福岡県' },
+            saga: { code: '410000', name: '佐賀県' },
+            nagasaki: { code: '420000', name: '長崎県' },
+            kumamoto: { code: '430000', name: '熊本県' },
+            oita: { code: '440000', name: '大分県' },
+            miyazaki: { code: '450000', name: '宮崎県' },
+            kagoshima: { code: '460100', name: '鹿児島県' },
+            okinawa: { code: '471000', name: '沖縄県' }
+        };
+        let selectedPref = null;
+        document.querySelectorAll('#jp_map li').forEach(el => {
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelectorAll('#jp_map li').forEach(p => p.classList.remove('selected'));
+                this.classList.add('selected');
+                // クラス名から都道府県IDを取得
+                const prefId = this.classList[0];
+                selectedPref = prefId;
+                const pref = prefCodeMap[prefId];
+                if (pref) {
+                    // 別ページに遷移し、都道府県IDをパラメータで渡す
+                    window.location.href = `pref.html?pref=${prefId}`;
+                }
+            });
+        });
+    </script>
+    <!-- 
+    【レイアウト・機能説明】
+    - .main-flex: タイピングゲームと日本地図を横並びに配置するflexラッパー。
+    - .game-box: タイピングゲーム本体。中央寄せ、幅420px。
+    - .map-box: 右側の日本地図。style.cssの#jp_mapスタイルを利用。
+    - レスポンシブ対応で900px以下は縦並び。
+    - 日本地図クリックでpref.html?pref=都道府県IDに遷移。
+    - style.cssの#jp_map, li, a, span等のスタイルがそのまま適用される。
+    - 既存のタイピングゲーム機能・UIはそのまま。
+    -->
+</body>
+
+</html>
