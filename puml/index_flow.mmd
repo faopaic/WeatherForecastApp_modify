@@ -1,0 +1,25 @@
+flowchart TD
+    Start["ページ表示"]
+    Select["都道府県クリック"]
+    Move["pref.htmlへ遷移（パラメータ付与）"]
+    PrefParam["URLパラメータから都道府県ID取得"]
+    PrefAPIFetch["気象庁APIから天気データ取得"]
+    PrefShow["天気・気温・降水確率・波風・ライブカメラ等を表示"]
+    PrefWarnFetch["注意報・警報データ取得"]
+    PrefWarnShow["注意報・警報を先頭に表示（あれば）"]
+    TypingMapBtn["タイピングゲームボタン押下"]
+    HeatMapBtn["ヒートマップボタン押下"]
+    Heatmap["ヒートマップ表示"]
+    Typing["タイピングゲーム表示"]
+
+    Start --> Select
+    Select --> Move
+    Move --> PrefParam
+    PrefParam --> PrefAPIFetch
+    PrefAPIFetch --> PrefShow
+    PrefShow --> PrefWarnFetch
+    PrefWarnFetch --> PrefWarnShow
+    PrefShow --> TypingMapBtn
+    PrefShow --> HeatMapBtn
+    HeatMapBtn --> Heatmap
+    TypingMapBtn --> Typing

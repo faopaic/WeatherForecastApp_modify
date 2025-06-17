@@ -212,6 +212,11 @@
             </div>
         </div>
     </div>
+    <!-- prefに戻るボタン用box追加 -->
+    <div class="back-box" style="width:100%;display:flex;justify-content:center;margin:32px 0 24px 0;">
+        <button onclick="window.location.href='pref.html'"
+            style="padding:10px 32px;font-size:1.1em;border-radius:8px;background:#007acc;color:#fff;border:none;cursor:pointer;">戻る</button>
+    </div>
     <script>
         const prefs = [
             '北海道', '青森', '岩手', '宮城', '秋田', '山形', '福島', '茨城', '栃木', '群馬', '埼玉', '千葉', '東京', '神奈川',
@@ -298,11 +303,13 @@
             if (current < quiz.length) {
                 question.textContent = quiz[current];
                 answer.value = '';
+                answer.disabled = false; // ここで有効化
                 answer.focus();
                 highlightMapPref(quiz[current]); // 追加
             } else {
                 question.textContent = '終了！';
-                result.textContent = `全問クリア！スコア: ${score} / ${quiz.length}　タイム: ${timer.toFixed(1)} 秒`;
+                let clearMsg = (score === 47) ? '全問正解！' : 'クリア！';
+                result.textContent = `${clearMsg} スコア: ${score} / ${quiz.length}  タイム: ${timer.toFixed(1)} 秒`;
                 highlightMapPref(null); // 終了時リセット
                 endGame();
             }
@@ -310,57 +317,58 @@
 
         // ローマ字変換用マップ（簡易版・主要な都道府県のみ/必要に応じて拡張）
         const romajiMap = {
-            '北海道': ['hokkaido'],
+            '北海道': ['hokkaidou', 'hokkaido', 'hokkaidou', 'hokkaido'],
             '青森': ['aomori'],
             '岩手': ['iwate'],
             '宮城': ['miyagi'],
             '秋田': ['akita'],
             '山形': ['yamagata'],
-            '福島': ['fukushima'],
+            '福島': ['fukushima', 'fukusima', 'hukusima', 'hukushima'],
             '茨城': ['ibaraki'],
-            '栃木': ['tochigi'],
-            '群馬': ['gunma'],
+            '栃木': ['tochigi', 'totigi', 'totigi'],
+            '群馬': ['gunnma', 'gunma'],
             '埼玉': ['saitama'],
-            '千葉': ['chiba'],
-            '東京': ['tokyo'],
+            '千葉': ['chiba', 'tiba'],
+            '東京': ['toukyou', 'tokyo'],
             '神奈川': ['kanagawa'],
             '新潟': ['niigata'],
             '富山': ['toyama'],
-            '石川': ['ishikawa'],
-            '福井': ['fukui'],
-            '山梨': ['yamanashi'],
+            '石川': ['ishikawa', 'isikawa'],
+            '福井': ['fukui', 'hukui'],
+            '山梨': ['yamanashi', 'yamanasi'],
             '長野': ['nagano'],
-            '岐阜': ['gifu'],
-            '静岡': ['shizuoka'],
+            '岐阜': ['gifu', 'gihu'],
+            '静岡': ['shizuoka', 'sizuoka'],
             '愛知': ['aichi'],
             '三重': ['mie'],
-            '滋賀': ['shiga'],
-            '京都': ['kyoto'],
-            '大阪': ['osaka'],
-            '兵庫': ['hyogo'],
+            '滋賀': ['shiga', 'siga'],
+            '京都': ['kyoto', 'kyouto'],
+            '大阪': ['osaka', 'oosaka'],
+            '兵庫': ['hyogo', 'hyougo', 'hyogo', 'hyougo'],
             '奈良': ['nara'],
             '和歌山': ['wakayama'],
             '鳥取': ['tottori'],
-            '島根': ['shimane'],
+            '島根': ['shimane', 'simane'],
             '岡山': ['okayama'],
-            '広島': ['hiroshima'],
-            '山口': ['yamaguchi'],
-            '徳島': ['tokushima'],
+            '広島': ['hiroshima', 'hirosima', 'hiroshima', 'hirosima', 'hiroshima', 'hirosima', 'hiroshima', 'hirosima'],
+            '山口': ['yamaguchi', 'yamaguti'],
+            '徳島': ['tokushima', 'tokusima'],
             '香川': ['kagawa'],
             '愛媛': ['ehime'],
-            '高知': ['kochi'],
-            '福岡': ['fukuoka'],
+            '高知': ['kochi', 'kouchi', 'kouti', 'kouti'],
+            '福岡': ['fukuoka', 'hukuoka'],
             '佐賀': ['saga'],
-            '長崎': ['nagasaki'],
+            '長崎': ['nagasaki', 'nagasaki'],
             '熊本': ['kumamoto'],
-            '大分': ['oita'],
-            '宮崎': ['miyazaki'],
-            '鹿児島': ['kagoshima'],
+            '大分': ['oita', 'ooita'],
+            '宮崎': ['miyazaki', 'miyazaki'],
+            '鹿児島': ['kagoshima', 'kagosima'],
             '沖縄': ['okinawa']
         };
 
         answer.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && !answer.disabled && started) {
+                answer.disabled = true; // エンター受付後すぐ入力不可に
                 const userInput = answer.value.trim();
                 const correct = quiz[current];
                 const romajiList = romajiMap[correct] || [];
@@ -378,7 +386,7 @@
                 setTimeout(() => {
                     result.textContent = '';
                     showQuestion();
-                }, 800);
+                }, 500); // 500ms待つ
             }
         });
 
