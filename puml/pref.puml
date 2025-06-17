@@ -1,0 +1,98 @@
+@startuml  k
+' 都道府県ごとの天気・気象情報表示アクティビティ図
+start
+:URLパラメータから都道府県ID取得;
+if (都道府県IDが有効?) then (はい)
+  :都道府県名をタイトルに表示;
+  :天気予報APIからデータ取得;
+  :天気・気温・降水確率・波風・ライブカメラを表示;
+  :注意報・警報APIからデータ取得;
+  if (注意報・警報あり?) then (あり)
+    :警報・注意報を強調表示;
+  else (なし)
+    :警報・注意報なし表示;
+  endif
+else (いいえ)
+  :「都道府県が指定されていません」と表示;
+endif
+stop
+@enduml
+
+'-----------------------------
+' アクティビティ図
+'-----------------------------
+@startuml activity
+start
+:URLパラメータから都道府県ID取得;
+if (都道府県IDが有効?) then (はい)
+  :都道府県名をタイトルに表示;
+  :天気予報APIからデータ取得;
+  :天気・気温・降水確率・波風・ライブカメラを表示;
+  :注意報・警報APIからデータ取得;
+  if (注意報・警報あり?) then (あり)
+    :警報・注意報を強調表示;
+  else (なし)
+    :警報・注意報なし表示;
+  endif
+else (いいえ)
+  :「都道府県が指定されていません」と表示;
+endif
+stop
+@enduml
+
+'-----------------------------
+' クラス図
+'-----------------------------
+@startuml class
+class Prefecture {
+  +code: String
+  +name: String
+}
+class WeatherData {
+  +date: Date
+  +weather: String
+  +temperatureMin: String
+  +temperatureMax: String
+  +pop: String
+  +wave: String
+  +wind: String
+}
+class WeatherApiClient {
+  +getWeatherData(prefCode: String): WeatherData[]
+  +getWarningData(prefCode: String): String
+}
+Prefecture "1" -- "*" WeatherData
+WeatherApiClient ..> Prefecture
+WeatherApiClient ..> WeatherData
+@enduml
+
+'-----------------------------
+' ユースケース図
+'-----------------------------
+@startuml usecase
+actor User
+rectangle "天気・気象予報システム" {
+  User -- (都道府県を選択)
+  User -- (天気情報を閲覧)
+  User -- (ライブカメラを見る)
+  User -- (注意報・警報を確認)
+  (都道府県を選択) ..> (天気情報を閲覧)
+  (都道府県を選択) ..> (ライブカメラを見る)
+  (都道府県を選択) ..> (注意報・警報を確認)
+}
+@enduml
+
+'-----------------------------
+' シーケンス図
+'-----------------------------
+@startuml sequence
+actor User
+participant "pref.html" as View
+participant "気象庁WebAPI" as API
+User -> View: 都道府県を選択
+View -> API: getWeatherData(prefCode)
+API --> View: 天気・気温・降水確率・波風データ
+View -> API: getWarningData(prefCode)
+API --> View: 注意報・警報データ
+View -> User: 天気・気象情報を表示
+@enduml
