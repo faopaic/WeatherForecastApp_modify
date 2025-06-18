@@ -76,6 +76,7 @@ public class WeatherForecastApp {
     }
 
     public static void main(String[] args) {
+        @SuppressWarnings("resource")
         Scanner scanner = new Scanner(System.in);
         System.out.println("都道府県を選択してください：");
         String[] prefNames = new String[PREF_CODE_MAP.size()];
@@ -122,6 +123,7 @@ public class WeatherForecastApp {
                 selected = -1;
             }
         }
+        
         String prefName = prefNames[selected - 1];
         String prefCode = PREF_CODE_MAP.get(prefName);
         String targetUrl = "https://www.jma.go.jp/bosai/forecast/data/forecast/" + prefCode + ".json";
